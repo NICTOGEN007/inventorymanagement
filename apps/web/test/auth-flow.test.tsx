@@ -94,7 +94,7 @@ describe('role-based access', () => {
     renderApp('/');
     const nav = await screen.findByRole('navigation', { name: 'Main' });
     expect(within(nav).getByRole('link', { name: 'Users' })).toBeInTheDocument();
-    expect(within(nav).getAllByRole('link')).toHaveLength(9);
+    expect(within(nav).getAllByRole('link')).toHaveLength(10);
   });
 
   it('hides user management from managers', async () => {

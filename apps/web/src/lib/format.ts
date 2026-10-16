@@ -36,3 +36,14 @@ export function initials(name: string): string {
     .map((part) => part[0]!.toUpperCase())
     .join('');
 }
+
+/** Paise as an editable rupee string: 61700 -> "617", 61750 -> "617.50". */
+export function paiseToInput(paise: number | undefined): string {
+  if (paise === undefined) return '';
+  return (paise / 100).toFixed(2).replace(/\.00$/, '');
+}
+
+/** Quantity with its unit, e.g. "12 pcs", "2.5 kg". */
+export function formatQuantity(quantity: number, unit: string): string {
+  return `${Number(quantity.toFixed(3)).toLocaleString('en-IN')} ${unit}`;
+}

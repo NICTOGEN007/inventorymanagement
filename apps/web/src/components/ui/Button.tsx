@@ -14,6 +14,21 @@ const VARIANTS = {
 
 const SIZES = { sm: 'h-8 px-3 text-sm', md: 'h-10 px-4 text-sm' } as const;
 
+/** Button styling for other elements, e.g. a router <Link> that should look like a button. */
+export function buttonClass({
+  variant = 'primary',
+  size = 'md',
+  className,
+}: { variant?: keyof typeof VARIANTS; size?: keyof typeof SIZES; className?: string } = {}) {
+  return cn(
+    'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors',
+    'focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed',
+    VARIANTS[variant],
+    SIZES[size],
+    className,
+  );
+}
+
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: keyof typeof VARIANTS;
   size?: keyof typeof SIZES;
@@ -35,13 +50,7 @@ export function Button({
       type={type}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors',
-        'focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed',
-        VARIANTS[variant],
-        SIZES[size],
-        className,
-      )}
+      className={buttonClass({ variant, size, className })}
       {...props}
     >
       {loading && <Spinner className="size-4" />}

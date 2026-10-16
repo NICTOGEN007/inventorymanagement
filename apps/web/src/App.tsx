@@ -8,10 +8,22 @@ import { ComingSoonPage } from '@/pages/ComingSoonPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+import { CategoriesPage } from '@/pages/products/CategoriesPage';
+import { ProductDetailPage } from '@/pages/products/ProductDetailPage';
+import { ProductFormPage } from '@/pages/products/ProductFormPage';
+import { ProductsPage } from '@/pages/products/ProductsPage';
+import { SuppliersPage } from '@/pages/suppliers/SuppliersPage';
 import { UsersPage } from '@/pages/users/UsersPage';
+import type { Permission } from '@ims/shared';
+import type { ReactNode } from 'react';
+
+const guard = (permission: Permission, page: ReactNode) => (
+  <RequirePermission permission={permission}>{page}</RequirePermission>
+);
 
 /** Modules built in later steps; each is already guarded by its permission. */
-const PLANNED = NAV_ITEMS.filter((item) => !['/', '/users'].includes(item.to));
+const BUILT = ['/', '/users', '/products', '/suppliers'];
+const PLANNED = NAV_ITEMS.filter((item) => !BUILT.includes(item.to));
 
 function HomeRoute() {
   const { can } = useAuth();
@@ -36,14 +48,13 @@ export function App() {
               }
             />
           ))}
-          <Route
-            path="users"
-            element={
-              <RequirePermission permission="users:manage">
-                <UsersPage />
-              </RequirePermission>
-            }
-          />
+          <Route path="products" element={guard('products:read', <ProductsPage />)} />
+          <Route path="products/new" element={guard('products:write', <ProductFormPage />)} />
+          <Route path="products/categories" element={guard('products:read', <CategoriesPage />)} />
+          <Route path="products/:id" element={guard('products:read', <ProductDetailPage />)} />
+          <Route path="products/:id/edit" element={guard('products:write', <ProductFormPage />)} />
+          <Route path="suppliers" element={guard('purchases:read', <SuppliersPage />)} />
+          <Route path="users" element={guard('users:manage', <UsersPage />)} />
           <Route path="account" element={<AccountPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>

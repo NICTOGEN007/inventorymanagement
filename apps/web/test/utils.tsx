@@ -12,6 +12,8 @@ export interface MockResponse {
 }
 export interface RecordedCall {
   key: string;
+  /** Path plus query string, e.g. "/api/products?search=milk". */
+  url: string;
   body: unknown;
   headers: Record<string, string>;
 }
@@ -29,6 +31,7 @@ export function mockApi(routes: Record<string, Handler>): RecordedCall[] {
       const url = new URL(String(input), 'http://localhost');
       const call: RecordedCall = {
         key: `${init?.method ?? 'GET'} ${url.pathname}`,
+        url: url.pathname + url.search,
         body: init?.body ? JSON.parse(String(init.body)) : undefined,
         headers: (init?.headers ?? {}) as Record<string, string>,
       };

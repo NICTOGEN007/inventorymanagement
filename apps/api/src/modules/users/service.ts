@@ -4,6 +4,7 @@ import { isValidObjectId } from 'mongoose';
 import { UserModel } from '../../models/index.js';
 import { AppError } from '../../utils/app-error.js';
 import { hashPassword } from '../../utils/password.js';
+import { containsPattern } from '../../utils/query.js';
 import { revokeUserSessions } from '../auth/service.js';
 import { toUserDto } from './dto.js';
 
@@ -13,14 +14,12 @@ export interface ListUsersQuery {
   status?: 'active' | 'inactive';
 }
 
-const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
 export async function listUsers({ search, role, status }: ListUsersQuery): Promise<UserDto[]> {
   const filter: mongoose.QueryFilter<Record<string, unknown>> = {};
   if (role) filter.role = role;
   if (status) filter.isActive = status === 'active';
   if (search) {
-    const pattern = new RegExp(escapeRegex(search.trim()), 'i');
+    const pattern = containsPattern(search);
     filter.$or = [{ name: pattern }, { email: pattern }];
   }
   const users = await UserModel.find(filter).sort({ isActive: -1, name: 1 }).limit(500).lean();

@@ -5,8 +5,8 @@ GST-compliant invoicing, AI demand forecasting and an AI assistant.
 
 Built with the **MERN** stack in TypeScript: MongoDB, Express, React and Node.js.
 
-> **Status:** Steps 1–3 of 10 are complete: project scaffolding, database models with realistic
-> demo data, and sign-in with role-based access. See the roadmap in
+> **Status:** Steps 1–4 of 10 are complete: scaffolding, database and demo data, sign-in with
+> roles, and the product catalogue (products, categories, suppliers). See the roadmap in
 > [docs/PLAN.md](docs/PLAN.md).
 
 ## Features (planned)
@@ -151,17 +151,19 @@ afterwards). Without internet access, point it at an installed `mongod` instead:
 
 ## API
 
-| Method | Path              | Description                                                 |
-| ------ | ----------------- | ----------------------------------------------------------- |
-| GET    | `/api/health`     | Service and database status (`200` ok, `503` degraded)      |
-| POST   | `/api/auth/login` | Sign in (also `refresh`, `logout`, `me`, `change-password`) |
-| GET    | `/api/users`      | Manage staff accounts (admin only)                          |
+| Area                   | Paths                                                           |
+| ---------------------- | --------------------------------------------------------------- |
+| Health                 | `GET /api/health`                                               |
+| Sign-in and sessions   | `/api/auth/login`, `refresh`, `logout`, `me`, `change-password` |
+| Staff accounts (admin) | `/api/users`                                                    |
+| Catalogue              | `/api/products`, `/api/categories`, `/api/suppliers`            |
 
-Full details, including error codes, are in [docs/AUTH.md](docs/AUTH.md#api). Errors always have
-the shape `{ "error": { "code": "...", "message": "..." } }`.
+Every endpoint, its permission and its fields are listed in [docs/API.md](docs/API.md). Errors
+always have the shape `{ "error": { "code": "...", "message": "..." } }`.
 
 ## Documentation
 
 - [Project plan & roadmap](docs/PLAN.md)
 - [Database design & ER diagram](docs/DATABASE.md)
 - [Authentication, roles & security](docs/AUTH.md)
+- [REST API reference](docs/API.md)
