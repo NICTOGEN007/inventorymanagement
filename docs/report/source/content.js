@@ -11,14 +11,14 @@ const K = (f) => `${DIR}/code/${f}.png`;
 
 exports.meta = {
   title: 'Digital Inventory and Sales Management System',
-  year: '2025-2026',
+  year: '2026-2027',
   members: [
-    ['KEERTHANA P', '1GV22CI___'],
-    ['L MOHAMMED FAHAD', '1GV22CI___'],
-    ['MEHFUZA KHANUM', '1GV22CI___'],
-    ['MOHAMMED SAAD', '1GV22CI___'],
+    ['KEERTHANA P', '1GV25CI021'],
+    ['L MOHAMMED FAHAD', '1GV25CI023'],
+    ['MEHFUZA KHANUM', '1GV25CI026'],
+    ['MOHAMMED SAAD', '1GV25CI028'],
   ],
-  guide: { name: 'Prof. ____________', designation: 'Assistant Professor' },
+  guide: { name: 'Prof. APOORVA D', designation: 'Assistant Professor' },
   hod: { name: 'Dr. LEELAVATHY S R', designation: 'Assoc. Prof. & Head' },
   principal: { name: 'Dr. SYED ARIFF', designation: 'Principal' },
   coordinator: 'Prof. MUKESH M',
@@ -154,7 +154,7 @@ exports.chapters = [
           ['View the audit log', '✓', '', ''],
         ]],
       ['h2', '3.6', 'DATABASE DESIGN'],
-      ['p', 'The database consists of thirteen collections (Table 3.2). Fig 3.7 shows the entity-relationship diagram. Three design decisions are central. First, all amounts of money are stored as integers in paise (1 rupee = 100 paise), which avoids the rounding errors of floating-point numbers. Second, a product\'s stock is never edited directly: it changes only together with a stock movement that records the type, quantity, resulting balance, cost, user and source document. Third, sales and purchase orders store a snapshot of the product name, HSN code, price and tax at the time of the transaction, so later price changes never alter past invoices.'],
+      ['p', 'The database consists of thirteen collections (Table 3.2). Three design decisions are central. First, all amounts of money are stored as integers in paise (1 rupee = 100 paise), which avoids the rounding errors of floating-point numbers. Second, a product\'s stock is never edited directly: it changes only together with a stock movement that records the type, quantity, resulting balance, cost, user and source document. Third, sales and purchase orders store a snapshot of the product name, HSN code, price and tax at the time of the transaction, so later price changes never alter past invoices.'],
       ['table', 't3.1', 'Database Collections', [1.6, 4.4],
         ['Collection', 'Purpose'],
         [
@@ -172,7 +172,6 @@ exports.chapters = [
           ['stockmovements', 'The stock ledger: one entry for every change in stock.'],
           ['auditlogs', 'Who changed what and when (e.g. price changes, orders placed, users deactivated).'],
         ]],
-      ['fig', 'f3.7', require('path').join(__dirname, '../../images/er-diagram.png'), 'Entity Relationship Diagram', 5.0],
     ],
   },
   {

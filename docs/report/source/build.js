@@ -215,11 +215,11 @@ const cover = [
   center('BELAGAVI–590018', 24, COLORS.purple, { after: 0 }),
   center(M.year, 24, COLORS.purple, { after: 160 }),
   imgPara(LOGO_VTU, 1.35, 320),
-  center('A Major Project Phase II Report', 28, COLORS.black, { bold: false, after: 20 }),
+  center('A Community Project Report', 28, COLORS.black, { bold: false, after: 20 }),
   center('On', 28, COLORS.black, { bold: false, after: 200 }),
   center(`“${M.title}”`, 32, COLORS.red, { after: 360 }),
-  center(`Submitted in the partial fulfillment of the requirements for the 7th Semester`, 23, COLORS.black, { bold: false, after: 20 }),
-  center('A Major Project Phase II – BCI786 for the award of the degree of', 23, COLORS.black, { bold: false, after: 300 }),
+  center(`Submitted in the partial fulfillment of the requirements for the 3rd Semester`, 23, COLORS.black, { bold: false, after: 20 }),
+  center('A Community Project - 1BCP308 for the award of the degree of', 23, COLORS.black, { bold: false, after: 300 }),
   center('Bachelor of Engineering', 28, COLORS.green, { after: 0 }),
   center('In', 28, COLORS.green, { after: 0 }),
   center('Department of Computer Science and Engineering', 28, COLORS.green, { after: 0 }),
@@ -243,7 +243,7 @@ const memberList = M.members.map(([n, u]) => `${n}-${u}`);
 const certRuns = (() => {
   const b = { size: 24, font: FONT };
   const r = [
-    new TextRun({ ...b, text: 'This is to certify that the Major Project Phase II entitled ' }),
+    new TextRun({ ...b, text: 'This is to certify that the Community Project entitled ' }),
     new TextRun({ ...b, text: `“${M.title}”`, color: COLORS.red }),
     new TextRun({ ...b, text: ' is a bonafide work carried out by ' }),
   ];
@@ -253,11 +253,11 @@ const certRuns = (() => {
     r.push(new TextRun({ ...b, text: i < memberList.length - 1 ? ', ' : ' ' }));
   });
   r.push(
-    new TextRun({ ...b, text: 'in the partial fulfillment for the completion of 7th semester of Bachelor of Engineering in ' }),
+    new TextRun({ ...b, text: 'in the partial fulfillment for the completion of 3rd semester of Bachelor of Engineering in ' }),
     new TextRun({ ...b, text: 'Computer Science and Engineering (Artificial Intelligence and Machine Learning)', color: COLORS.red }),
     new TextRun({ ...b, text: ' of the ' }),
     new TextRun({ ...b, text: 'Visvesvaraya Technological University, Belagavi', color: COLORS.purple }),
-    new TextRun({ ...b, text: ` during the academic year ${M.year}. It is certified that all corrections/suggestions indicated for the assessment have been incorporated in the Major Project Phase II Report deposited in the department library.` }),
+    new TextRun({ ...b, text: ` during the academic year ${M.year}. It is certified that all corrections/suggestions indicated for the assessment have been incorporated in the Community Project Report deposited in the department library.` }),
   );
   return r;
 })();
@@ -291,7 +291,7 @@ const certificate = [
   center('(ARTIFICIAL INTELLIGENCE AND MACHINE LEARNING)', 27, COLORS.black, { after: 360 }),
   center('CERTIFICATE', 30, COLORS.red, { bold: false, underline: true, after: 300 }),
   new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { line: 400, after: 160 }, indent: { firstLine: 500 }, children: certRuns }),
-  para('The report has been approved as it satisfies the academic requirement in respect of Major Project Phase II Report – BCI786 prescribed for the Bachelor of Engineering Degree.', { indent: false, line: 400, after: 2600 }),
+  para('The report has been approved as it satisfies the academic requirement in respect of Community Project Report – 1BCP308 prescribed for the Bachelor of Engineering Degree.', { indent: false, line: 400, after: 2600 }),
   sigTable(),
 ];
 
@@ -312,13 +312,13 @@ function declGrid() {
 }
 const declaration = [
   new Paragraph({ pageBreakBefore: true, alignment: AlignmentType.CENTER, spacing: { before: 200, after: 400 }, children: [new TextRun({ text: 'DECLARATION', bold: true, size: 28, font: FONT })] }),
-  para(`We here by declare that the Project work entitled **“${M.title}”** submitted to **Visvesvaraya Technological University**, Belagavi during the year **2025-26** in the partial fulfillment for the award of **Bachelor of Engineering** in **Computer Science and Engineering (Artificial Intelligence and Machine Learning)** is a record of bonafide work carried out by us under the supervision of `, { line: 400, after: 0 }),
+  para(`We here by declare that the Project work entitled **“${M.title}”** submitted to **Visvesvaraya Technological University**, Belagavi during the year **2026-27** in the partial fulfillment for the award of **Bachelor of Engineering** in **Computer Science and Engineering (Artificial Intelligence and Machine Learning)** is a record of bonafide work carried out by us under the supervision of `, { line: 400, after: 0 }),
 ];
 // The guide's name sits inside the paragraph above; rebuild that paragraph with a highlighted placeholder run.
 declaration[1] = new Paragraph({
   alignment: AlignmentType.JUSTIFIED, spacing: { line: 400, after: 200 }, indent: { firstLine: 720 },
   children: [
-    ...runs(`We here by declare that the Project work entitled **“${M.title}”** submitted to **Visvesvaraya Technological University**, Belagavi during the year **2025-26** in the partial fulfillment for the award of **Bachelor of Engineering** in **Computer Science and Engineering (Artificial Intelligence and Machine Learning)** is a record of bonafide work carried out by us under the supervision of `, { size: 24, font: FONT }),
+    ...runs(`We here by declare that the Project work entitled **“${M.title}”** submitted to **Visvesvaraya Technological University**, Belagavi during the year **2026-27** in the partial fulfillment for the award of **Bachelor of Engineering** in **Computer Science and Engineering (Artificial Intelligence and Machine Learning)** is a record of bonafide work carried out by us under the supervision of `, { size: 24, font: FONT }),
     placeholder(M.guide.name, { size: 24, font: FONT, bold: true }),
     ...runs(`**, Asst. Prof** Department of Computer Science and Engineering (Artificial Intelligence and Machine Learning), Dr. T Thimmaiah Institute of Technology – KGF.`, { size: 24, font: FONT }),
   ],
@@ -343,19 +343,19 @@ const ackNames = new Table({
 const ack = [
   frontHead('ACKNOWLEDGEMENT'),
   para('The successful completion of any task would be incomplete without the mention of the people who made it possible, whose constant guidance and encouragement crown effort with success.'),
-  para('It is with the profound feeling of gratitude we would like to express our sincere thanks to our institution **Dr. T. THIMMAIAH INSTITUTE OF TECHNOLOGY, KGF,** for providing excellent infrastructure for successful completion of Project Phase II.'),
+  para('It is with the profound feeling of gratitude we would like to express our sincere thanks to our institution **Dr. T. THIMMAIAH INSTITUTE OF TECHNOLOGY, KGF,** for providing excellent infrastructure for successful completion of the Community Project.'),
   para(`We wish to express a whole hearted thanks to our Principal, **${M.principal.name}, Dr. TTIT, K.G.F,** for being a constant support in carrying out this project.`),
-  para(`We would like to extend heartly thanks to our HOD, **${M.hod.name}, Associate Professor and Head, Dept. of CSE (AI & ML), Dr. TTIT, K.G.F,** for being a constant support of encouragement to carry out the Project Phase II successfully.`),
+  para(`We would like to extend heartly thanks to our HOD, **${M.hod.name}, Associate Professor and Head, Dept. of CSE (AI & ML), Dr. TTIT, K.G.F,** for being a constant support of encouragement to carry out the Community Project successfully.`),
   new Paragraph({
     alignment: AlignmentType.JUSTIFIED, spacing: { line: 360, after: 160 }, indent: { firstLine: 720 },
     children: [
       ...runs('We would like to extend hearty thanks to our guide ', { size: 24, font: FONT }),
       placeholder(M.guide.name, { size: 24, font: FONT, bold: true }),
-      ...runs(`**, Asst. Professor** and our Coordinator **${M.coordinator}, Asst. Professor, Dept. of CSE (AI & ML), Dr. TTIT, K.G.F,** for their valuable suggestions, guidance and support in the completion of this Project Phase II work.`, { size: 24, font: FONT }),
+      ...runs(`**, Asst. Professor** and our Coordinator **${M.coordinator}, Asst. Professor, Dept. of CSE (AI & ML), Dr. TTIT, K.G.F,** for their valuable suggestions, guidance and support in the completion of this Community Project work.`, { size: 24, font: FONT }),
     ],
   }),
-  para('We would also like to thank all teaching and non-teaching staff of Dept. of CSE (AI&ML), Dr. TTIT, K.G.F who were directly and indirectly supported for carrying out this Project Phase II successfully.'),
-  para('We extend our hearty thanks to our parents for what we are today and friends who helped us in successful completion of our Project Phase II report and for the betterment of our career.', { after: 300 }),
+  para('We would also like to thank all teaching and non-teaching staff of Dept. of CSE (AI&ML), Dr. TTIT, K.G.F who were directly and indirectly supported for carrying out this Community Project successfully.'),
+  para('We extend our hearty thanks to our parents for what we are today and friends who helped us in successful completion of our Community Project report and for the betterment of our career.', { after: 300 }),
   ackNames,
 ];
 const abstract = [
