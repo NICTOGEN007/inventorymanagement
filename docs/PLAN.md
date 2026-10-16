@@ -34,8 +34,8 @@ generate GST-compliant invoices, and use AI to forecast demand and answer busine
 | Returns               | Linked to the original invoice; stock goes back up                                                                                                                     |
 | Customers             | Optional on a sale; GSTIN and state decide CGST+SGST vs IGST; purchase history                                                                                         |
 | Dashboard & reports   | Sales, profit, top products, GST summary, stock valuation, low stock; CSV/PDF export                                                                                   |
-| AI: Smart Restock     | Demand forecast per product, days-until-stockout, reorder suggestions, dead stock                                                                                      |
-| AI: Assistant         | Chat that answers questions by calling the app's own report/forecast APIs                                                                                              |
+| AI: Smart Restock     | Forecasts demand and prepares restock purchase orders; the owner reviews and confirms                                                                                  |
+| AI: Assistant         | Gemini-powered chat: answers questions and prepares restock plans on request                                                                                           |
 | Audit log             | Who changed what and when                                                                                                                                              |
 
 ## 4. India / GST rules
@@ -56,7 +56,7 @@ The pure calculations live in `packages/shared/src/gst.ts` and are unit tested.
 flowchart LR
   Browser["React app<br/>(Vite, Tailwind, TanStack Query)"] -- "/api (JSON over HTTPS)" --> API["Express 5 API<br/>(TypeScript, Zod)"]
   API -- Mongoose --> DB[("MongoDB<br/>replica set")]
-  API -- "tool calls" --> LLM["LLM provider<br/>(optional, for the assistant)"]
+  API -- "tool calls" --> LLM["Google Gemini<br/>(optional, for the assistant)"]
   Shared["@ims/shared<br/>types, GST & money logic"] -.-> Browser
   Shared -.-> API
 ```
@@ -75,23 +75,64 @@ The ER diagram and design decisions are in [DATABASE.md](DATABASE.md).
 
 ## 7. AI features
 
-### 7.1 Smart Restock (demand forecasting)
+The headline feature is an **AI restocking agent**: the owner asks, the AI analyses past demand and
+prepares the purchase orders, and the owner confirms before anything is ordered.
 
-- Daily sales per product are aggregated from `sales`.
-- **Holt-Winters exponential smoothing** (level + trend + weekly seasonality) forecasts the next
-  7–30 days with a confidence band. Falls back to a moving average for products with little history.
-- **Reorder point** = expected demand during supplier lead time + safety stock
+### 7.1 Demand forecasting engine (machine learning, runs in the API)
+
+- Daily sales per product are aggregated from `sales` (IST calendar days).
+- **Holt-Winters exponential smoothing** (level + trend + weekly seasonality) forecasts demand for
+  the coming days, with a confidence band; a moving average is used for products with little
+  history. Known festival dates add an uplift learned from past festivals.
+- **Reorder point** = expected demand during the supplier's lead time + safety stock
   (safety stock = z × σ × √lead time, z = 1.65 for a 95% service level).
-- Outputs: days until stockout, suggested order quantity, one-click purchase order, dead-stock list.
-- Accuracy reported as **MAPE** on a hold-out period (for the project report).
-- Runs inside the API: no external service, no cost.
+- **Order quantity** = demand over lead time + review period + safety stock − stock on hand −
+  quantity already on order (open purchase orders), rounded up to the pack size.
+- Also produces: days until stockout, dead stock (no sales for a long time: never reordered).
+- Accuracy is reported as **MAPE** on a hold-out period, for the project report.
+- No external service and no cost; works without any AI key.
 
-### 7.2 "Ask your Inventory" assistant
+### 7.2 Restock plans with owner confirmation (human in the loop)
 
-- Chat panel; the LLM is given **tools** that call our own endpoints (sales summary, top products,
-  low stock, forecasts, GST summary). It never invents numbers.
-- Read-only: the assistant cannot change data.
-- Provider is configurable through environment variables; the app works without it.
+A **restock plan** is a stored draft: items grouped by supplier, with stock on hand, average daily
+sales, days until stockout, suggested quantity, cost incl. GST, and a one-line reason per item
+(e.g. "sales up 40% this month; supplier takes 3 days").
+
+```mermaid
+stateDiagram-v2
+  [*] --> Draft: AI or Smart Restock page prepares a plan
+  Draft --> Draft: owner edits quantities / removes items (or asks the AI to)
+  Draft --> Confirmed: owner presses "Confirm & place orders"
+  Draft --> Cancelled: owner cancels
+  Draft --> Expired: stock changed / older than 24 h
+  Confirmed --> [*]: one purchase order per supplier is created
+```
+
+- **Only a person can confirm.** Confirming is a separate API endpoint that requires the
+  `purchases:manage` permission and is called by the owner's button press. The AI's tools can
+  create and edit drafts but have no way to confirm, so it can never place an order by itself.
+- Confirmation re-checks stock and open orders, then creates the purchase orders in one
+  transaction and writes an audit log entry ("restock plan confirmed by …").
+- The **Smart Restock** page shows and confirms the same plans without the chat.
+
+### 7.3 Proactive alerts
+
+- The API checks stock after sales and on a schedule. When items are forecast to run out within
+  their supplier's lead time, the dashboard shows a banner: "6 items need restocking: review plan".
+- The alert opens a ready-made draft plan; it still needs the owner's confirmation.
+
+### 7.4 "Ask your Inventory" assistant (Google Gemini)
+
+- Chat panel for admins and managers, using **Google Gemini** (free tier via a Google AI Studio API
+  key in `GEMINI_API_KEY`). Behind a small provider interface, so another model could be swapped in.
+- The model is given **tools** that call our own services: sales summary, top products, low stock,
+  forecasts, GST summary, `create_restock_plan` and `update_restock_plan`. It never invents numbers.
+- Example: "Can you restock based on previous demand? Keep it under ₹50,000" → the AI calls
+  `create_restock_plan` → the chat shows the plan as an interactive card with editable quantities
+  and a **Confirm & place orders** button → "make the oil 100" → `update_restock_plan`.
+- Without `GEMINI_API_KEY` the chat is hidden and everything else, including Smart Restock, works.
+- Privacy note: chat questions and the summary figures the tools return are sent to Google.
+  Check Google's terms for the free tier before using real shop data.
 
 ## 8. Quality bar
 
@@ -112,6 +153,6 @@ The ER diagram and design decisions are in [DATABASE.md](DATABASE.md).
 - [ ] **7. POS + GST invoice PDF**
 - [ ] **8. Returns + customers**
 - [ ] **9. Dashboard, reports, exports**
-- [ ] **9.5 AI: Smart Restock forecasting**
-- [ ] **9.6 AI: Assistant**
+- [ ] **9.5 AI: Forecasting engine, restock plans with confirmation, proactive alerts**
+- [ ] **9.6 AI: Gemini assistant that answers questions and prepares restock plans**
 - [ ] **10. End-to-end tests, docs (SRS, DFD, use-case, sequence diagrams), screenshots, deployment**
