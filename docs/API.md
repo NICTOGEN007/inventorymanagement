@@ -274,3 +274,54 @@ Body: `name`, and optionally `phone` (10-digit mobile, unique), `email`, `gstin`
 `address { line1, line2, city, pincode }`, `isActive`. A GSTIN sets the state when none is given
 and must match it. No state means a local customer (the shop's own state, so CGST + SGST).
 A customer's bills are `GET /sales?customer=<id>` and their returns `GET /returns?customer=<id>`.
+
+## Dashboard and reports
+
+All need `reports:read` (admin and manager).
+
+| Method | Path                 | Description                                                                                                        |
+| ------ | -------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| GET    | `/reports/dashboard` | Totals vs the previous period, net sales by day, top products, payments, stock to reorder                          |
+| GET    | `/reports/sales`     | By day, week or month (`groupBy`), by payment method and by cashier                                                |
+| GET    | `/reports/products`  | By product and category; `sort` = `sales`, `profit` or `quantity`; `category`                                      |
+| GET    | `/reports/gst`       | Tax liability with set-off, by rate (B2B/B2C), HSN summary, B2B invoices, credit notes, input tax credit           |
+| GET    | `/reports/stock`     | Stock value at cost and selling price, cover in days, last sale; `stock` = `all`, `low`, `out`, `dead`; `category` |
+
+Query: `from` and `to` (IST dates, inclusive, at most 1,100 days). Defaults: last 30 days for the
+dashboard, this month for sales and products, last month for GST. The stock report is always as of
+now.
+
+- **Net sales** = invoices (incl. GST) − refunds. Sales count on the day they were billed, refunds on
+  the day the credit note was issued, as in the GST returns.
+- **Gross profit** = taxable value − cost of goods, with cost taken from each line at the time of
+  sale. Goods that go back on the shelf come off the cost; damaged goods taken back stay in it.
+- **GST set-off** follows section 49 / rule 88A: IGST credit first against IGST, then CGST and SGST;
+  CGST and SGST credit never cross. What is left is payable in cash; unused credit carries forward.
+- The dashboard compares with the period of the same length just before.
+
+Every report has the same shape, so the web app, the CSV and the PDF all come from it:
+
+```json
+{
+  "report": {
+    "kind": "sales",
+    "title": "Sales report",
+    "subtitle": "1 Oct 2026 – 16 Oct 2026",
+    "highlights": [{ "label": "Net sales", "value": 41244600, "type": "money" }],
+    "sections": [
+      {
+        "id": "periods",
+        "title": "By day",
+        "columns": [{ "key": "netSales", "label": "Net sales", "type": "money" }],
+        "rows": [{ "period": "16 Oct", "netSales": 1323400 }],
+        "totals": { "period": "Total", "netSales": 41244600 }
+      }
+    ]
+  }
+}
+```
+
+**Exports:** add `format=pdf` for the whole report (landscape A4 with page numbers) or `format=csv`
+for one table (`section=<id>`, the first by default). CSV has a UTF-8 byte-order mark so Excel reads
+the ₹ sign, money in rupees with two decimals, and text that a spreadsheet would run as a formula
+(`=`, `+`, `-`, `@`) starts with an apostrophe.

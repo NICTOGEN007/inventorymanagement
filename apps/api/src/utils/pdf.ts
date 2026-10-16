@@ -42,8 +42,17 @@ export type TextOptions = PDFKit.Mixins.TextOptions & {
  * An A4 document with the Inter fonts (which include the ₹ sign) and small drawing helpers.
  * `done` resolves to the finished PDF once `doc.end()` is called.
  */
-export function createPdf(info: PDFKit.DocumentInfo) {
-  const doc = new PDFDocument({ size: 'A4', margin: PAGE.margin, info });
+export function createPdf(
+  info: PDFKit.DocumentInfo,
+  options: { landscape?: boolean; bufferPages?: boolean } = {},
+) {
+  const doc = new PDFDocument({
+    size: 'A4',
+    layout: options.landscape ? 'landscape' : 'portrait',
+    margin: PAGE.margin,
+    bufferPages: options.bufferPages ?? false,
+    info,
+  });
   doc.registerFont('regular', join(FONTS, 'Inter-Regular.otf'));
   doc.registerFont('bold', join(FONTS, 'Inter-SemiBold.otf'));
 
@@ -54,13 +63,16 @@ export function createPdf(info: PDFKit.DocumentInfo) {
     doc.on('error', reject);
   });
 
+  const pageWidth = options.landscape ? PAGE.height : PAGE.width;
+  const pageHeight = options.landscape ? PAGE.width : PAGE.height;
   const left = PAGE.margin;
-  const right = PAGE.width - PAGE.margin;
+  const right = pageWidth - PAGE.margin;
   const layout = {
     left,
     right,
     width: right - left,
-    bottom: PAGE.height - PAGE.margin - 24,
+    bottom: pageHeight - PAGE.margin - 24,
+    pageHeight,
   };
 
   /** Writes text and returns the y position below it. */

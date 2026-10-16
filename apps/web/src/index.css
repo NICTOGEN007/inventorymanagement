@@ -13,3 +13,26 @@ html {
 html.dark {
   color-scheme: dark;
 }
+
+/*
+ * Chart colours. Series hues are validated for colour-blind separation and contrast on the card
+ * surface in each mode (white / slate-900); dark mode uses its own steps, not a flip.
+ */
+:root {
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+  --chart-3: #1baf7a;
+  --chart-surface: #ffffff;
+  --chart-grid: #e2e8f0;
+  --chart-axis: #cbd5e1;
+  --chart-label: #64748b;
+}
+html.dark {
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-surface: #0f172a;
+  --chart-grid: #1e293b;
+  --chart-axis: #334155;
+  --chart-label: #94a3b8;
+}

@@ -24,17 +24,20 @@ export const creditNotePdf = (r: { id: string; returnNumber: string }): PdfDocum
   kind: 'Credit note',
 });
 
-/** Saves the PDF, e.g. "INV-26-27-00042.pdf". */
-export async function downloadPdf(d: PdfDocument) {
-  const url = URL.createObjectURL(await apiFetchBlob(d.path));
+/** Downloads a file the API makes (it needs the user's token, so a plain link would not do). */
+export async function downloadFile(path: string, fileName: string) {
+  const url = URL.createObjectURL(await apiFetchBlob(path));
   const link = document.createElement('a');
   link.href = url;
-  link.download = fileName(d);
+  link.download = fileName;
   document.body.append(link);
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
+
+/** Saves the PDF, e.g. "INV-26-27-00042.pdf". */
+export const downloadPdf = (d: PdfDocument) => downloadFile(d.path, fileName(d));
 
 /**
  * Opens the browser's print dialog for the PDF. It is loaded into a hidden frame (the request

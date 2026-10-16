@@ -14,6 +14,7 @@ import { MovementsPage } from '@/pages/inventory/MovementsPage';
 import { CustomerDetailPage } from '@/pages/customers/CustomerDetailPage';
 import { CustomersPage } from '@/pages/customers/CustomersPage';
 import { PosPage } from '@/pages/pos/PosPage';
+import { ReportPage } from '@/pages/reports/ReportPage';
 import { ReturnDetailPage } from '@/pages/pos/ReturnDetailPage';
 import { ReturnFormPage } from '@/pages/pos/ReturnFormPage';
 import { ReturnsPage } from '@/pages/pos/ReturnsPage';
@@ -45,6 +46,7 @@ const BUILT = [
   '/inventory',
   '/purchases',
   '/customers',
+  '/reports',
 ];
 const PLANNED = NAV_ITEMS.filter((item) => !BUILT.includes(item.to));
 
@@ -80,6 +82,19 @@ export function App() {
           />
           <Route path="pos/returns" element={guard('sales:read', <ReturnsPage />)} />
           <Route path="pos/returns/:id" element={guard('sales:read', <ReturnDetailPage />)} />
+          <Route path="reports" element={guard('reports:read', <ReportPage kind="sales" />)} />
+          <Route
+            path="reports/products"
+            element={guard('reports:read', <ReportPage key="products" kind="products" />)}
+          />
+          <Route
+            path="reports/gst"
+            element={guard('reports:read', <ReportPage key="gst" kind="gst" />)}
+          />
+          <Route
+            path="reports/stock"
+            element={guard('reports:read', <ReportPage key="stock" kind="stock" />)}
+          />
           <Route path="customers" element={guard('customers:read', <CustomersPage />)} />
           <Route path="customers/:id" element={guard('customers:read', <CustomerDetailPage />)} />
           <Route path="products" element={guard('products:read', <ProductsPage />)} />

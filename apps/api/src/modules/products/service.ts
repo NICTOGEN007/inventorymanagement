@@ -23,7 +23,7 @@ type ProductDoc = Product & { _id: Types.ObjectId; createdAt: Date; updatedAt: D
 const OPEN_PO_STATUSES = ['ordered', 'partially_received'];
 
 /** Quantity still to arrive on open purchase orders, per product. */
-async function onOrderFor(ids: Types.ObjectId[]): Promise<Map<string, number>> {
+export async function onOrderFor(ids: Types.ObjectId[]): Promise<Map<string, number>> {
   if (ids.length === 0) return new Map();
   const rows = await PurchaseOrderModel.aggregate<{ _id: Types.ObjectId; quantity: number }>([
     { $match: { status: { $in: OPEN_PO_STATUSES }, 'items.product': { $in: ids } } },

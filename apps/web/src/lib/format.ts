@@ -76,3 +76,43 @@ export function istDateInput(days = 0): string {
 export function formatDateFromNow(days: number): string {
   return formatDate(new Date(Date.now() + days * 86_400_000).toISOString());
 }
+
+const trimNumber = (n: number) => String(Math.round(n * 10) / 10);
+
+/** Short rupee labels for chart axes: ₹500, ₹45K, ₹1.2L, ₹3Cr. */
+export function formatAxisINR(paise: number): string {
+  const rupees = paise / 100;
+  if (rupees >= 1e7) return `₹${trimNumber(rupees / 1e7)}Cr`;
+  if (rupees >= 1e5) return `₹${trimNumber(rupees / 1e5)}L`;
+  if (rupees >= 1e3) return `₹${trimNumber(rupees / 1e3)}K`;
+  return `₹${trimNumber(rupees)}`;
+}
+
+const dayTitle = new Intl.DateTimeFormat('en-IN', {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+const dayShort = new Intl.DateTimeFormat('en-IN', {
+  day: 'numeric',
+  month: 'short',
+  timeZone: 'UTC',
+});
+
+const dayMedium = new Intl.DateTimeFormat('en-IN', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+/** A business date key ("2026-10-16") as "Fri, 16 Oct 2026", "16 Oct 2026" or "16 Oct". */
+export function formatDateKey(
+  dateKey: string,
+  style: 'long' | 'medium' | 'short' = 'long',
+): string {
+  const date = new Date(`${dateKey}T00:00:00Z`);
+  return { long: dayTitle, medium: dayMedium, short: dayShort }[style].format(date);
+}
