@@ -7,6 +7,7 @@ const {
   PageBorderDisplay, PageBorderOffsetFrom, VerticalAlign, HeightRule, TableLayoutType,
 } = require('docx');
 const content = require('./content.js');
+if (process.env.REPORT_UPTO === 'methodology') require('./first-review.js')(content);
 const { papers } = require('./literature.js');
 
 const [, , OUT, PAGES] = process.argv;
