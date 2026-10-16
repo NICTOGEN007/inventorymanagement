@@ -53,3 +53,26 @@ export function formatChange(quantity: number, unit: string): string {
   const sign = quantity > 0 ? '+' : quantity < 0 ? '−' : '';
   return `${sign}${formatQuantity(Math.abs(quantity), unit)}`;
 }
+
+const dateOnly = new Intl.DateTimeFormat('en-IN', {
+  dateStyle: 'medium',
+  timeZone: 'Asia/Kolkata',
+});
+
+/** Calendar date in IST, e.g. "16 Oct 2026". */
+export function formatDate(iso: string): string {
+  return dateOnly.format(new Date(iso));
+}
+
+/** Today's date in IST as YYYY-MM-DD, `days` from now (for date inputs). */
+export function istDateInput(days = 0): string {
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(
+    new Date(Date.now() + days * 86_400_000),
+  );
+  return parts;
+}
+
+/** The IST date `days` from now, formatted like "19 Oct 2026". */
+export function formatDateFromNow(days: number): string {
+  return formatDate(new Date(Date.now() + days * 86_400_000).toISOString());
+}

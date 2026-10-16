@@ -128,3 +128,59 @@ Adjustment body:
 
 **Cost prices** (`costPrice` on products, `unitCost`/`value` on movements, and the summary) are
 only returned to roles with `reports:read`, so cashiers never see margins.
+
+## Settings
+
+| Method | Path        | Permission | Description                                                       |
+| ------ | ----------- | ---------- | ----------------------------------------------------------------- |
+| GET    | `/settings` | signed in  | Shop name, GSTIN, state and document prefixes (read-only for now) |
+
+## Purchase orders
+
+| Method | Path                           | Permission         | Description                                                                     |
+| ------ | ------------------------------ | ------------------ | ------------------------------------------------------------------------------- |
+| GET    | `/purchase-orders`             | `purchases:read`   | Newest first; `status` (incl. `open`), `supplier`, `search` (PO number), paging |
+| GET    | `/purchase-orders/:id`         | `purchases:read`   | Full order with lines, deliveries and supplier                                  |
+| POST   | `/purchase-orders`             | `purchases:manage` | Create a draft, or place it straight away (`place: true`)                       |
+| PUT    | `/purchase-orders/:id`         | `purchases:manage` | Replace a **draft** (placed orders cannot be edited)                            |
+| POST   | `/purchase-orders/:id/place`   | `purchases:manage` | Draft → ordered                                                                 |
+| POST   | `/purchase-orders/:id/receive` | `purchases:manage` | Record a delivery (full or partial)                                             |
+| POST   | `/purchase-orders/:id/cancel`  | `purchases:manage` | `{ reason }`: cancels, or closes a partly received order                        |
+
+Create / update body:
+
+```json
+{
+  "supplier": "<id>",
+  "items": [{ "product": "<id>", "quantity": 144, "unitCost": 14000 }],
+  "expectedAt": "2026-10-20",
+  "notes": "Deliver before 10 am",
+  "place": true
+}
+```
+
+- `unitCost` is per unit **excluding GST**, in paise. Each line's GST rate comes from the product.
+- GST is **CGST + SGST** when the supplier is in the shop's state, otherwise **IGST**.
+- `expectedAt` (IST date) defaults to today plus the supplier's delivery time when the order is placed.
+- Numbers follow the financial year: `PO/26-27/00001`.
+
+Receive body: `{ "items": [{ "product": "<id>", "quantity": 100 }], "supplierInvoiceNumber": "KAD/7781", "note": "…" }`.
+Receiving adds stock through the ledger (`purchase` movements), refuses more than is still to
+arrive, and moves the order to `partially_received` or `received`. Each product's cost price
+becomes the **weighted average** of the stock on the shelf and the new goods:
+
+```
+new cost = (stock before × old cost + received × order cost) / (stock before + received)
+```
+
+| Status               | Meaning                                 | Next                |
+| -------------------- | --------------------------------------- | ------------------- |
+| `draft`              | Being prepared, not sent                | edit, place, cancel |
+| `ordered`            | Sent to the supplier                    | receive, cancel     |
+| `partially_received` | Some goods arrived                      | receive, close      |
+| `received`           | Everything arrived                      | —                   |
+| `closed`             | Partly received; the rest will not come | —                   |
+| `cancelled`          | Nothing will arrive                     | —                   |
+
+Quantities still to arrive on `ordered` and `partially_received` orders show as `onOrder` on
+products, so the same goods are never ordered twice.

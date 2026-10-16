@@ -5,8 +5,8 @@ GST-compliant invoicing, AI demand forecasting and an AI assistant.
 
 Built with the **MERN** stack in TypeScript: MongoDB, Express, React and Node.js.
 
-> **Status:** Steps 1–5 of 10 are complete: scaffolding, database and demo data, sign-in with
-> roles, the product catalogue, and inventory (stock history, counts, write-offs, valuation). See the roadmap in
+> **Status:** Steps 1–6 of 10 are complete: scaffolding, database and demo data, sign-in with
+> roles, the product catalogue, inventory, and purchase orders with deliveries. See the roadmap in
 > [docs/PLAN.md](docs/PLAN.md).
 
 ## Features (planned)
@@ -151,13 +151,14 @@ afterwards). Without internet access, point it at an installed `mongod` instead:
 
 ## API
 
-| Area                   | Paths                                                           |
-| ---------------------- | --------------------------------------------------------------- |
-| Health                 | `GET /api/health`                                               |
-| Sign-in and sessions   | `/api/auth/login`, `refresh`, `logout`, `me`, `change-password` |
-| Staff accounts (admin) | `/api/users`                                                    |
-| Catalogue              | `/api/products`, `/api/categories`, `/api/suppliers`            |
-| Inventory              | `/api/inventory/movements`, `summary`, `adjustments`            |
+| Area                   | Paths                                                                    |
+| ---------------------- | ------------------------------------------------------------------------ |
+| Health                 | `GET /api/health`                                                        |
+| Sign-in and sessions   | `/api/auth/login`, `refresh`, `logout`, `me`, `change-password`          |
+| Staff accounts (admin) | `/api/users`                                                             |
+| Catalogue              | `/api/products`, `/api/categories`, `/api/suppliers`                     |
+| Inventory              | `/api/inventory/movements`, `summary`, `adjustments`                     |
+| Purchasing             | `/api/purchase-orders` (create, place, receive, cancel), `/api/settings` |
 
 Every endpoint, its permission and its fields are listed in [docs/API.md](docs/API.md). Errors
 always have the shape `{ "error": { "code": "...", "message": "..." } }`.

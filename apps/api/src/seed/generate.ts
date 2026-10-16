@@ -161,6 +161,12 @@ export interface SeedPurchaseOrder extends Amounts {
   expectedAt: Date;
   receivedAt?: Date;
   supplierInvoiceNumber?: string;
+  receipts: {
+    receivedAt: Date;
+    receivedBy: Id;
+    supplierInvoiceNumber: string;
+    items: { product: Id; quantity: number }[];
+  }[];
   createdBy: Id;
 }
 
@@ -535,6 +541,12 @@ export function generateDataset({ days, seed, now }: GenerateOptions): Dataset {
         po.status = 'received';
         po.receivedAt = receiptTime;
         po.supplierInvoiceNumber = `SI-${rng.string(6, '0123456789')}`;
+        po.receipts.push({
+          receivedAt: receiptTime,
+          receivedBy: managerId,
+          supplierInvoiceNumber: po.supplierInvoiceNumber,
+          items: po.items.map((i) => ({ product: i.product, quantity: i.quantity })),
+        });
         for (const item of po.items) {
           item.receivedQuantity = item.quantity;
           const product = products.find((p) => p.doc._id.equals(item.product))!;
@@ -826,6 +838,7 @@ export function generateDataset({ days, seed, now }: GenerateOptions): Dataset {
         total: sum('total'),
         orderedAt: orderTime,
         expectedAt: at(firstDay + arrivalDay * DAY_MS, 8 * 60 + 30),
+        receipts: [],
         createdBy: managerId,
       };
       purchaseOrders.push(po);

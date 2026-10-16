@@ -149,7 +149,7 @@ stateDiagram-v2
 - [x] **3. Auth + roles**: see [AUTH.md](AUTH.md)
 - [x] **4. Products, categories, suppliers** (API + UI): see [API.md](API.md)
 - [x] **5. Inventory ledger + stock adjustments**: stock history, counts, write-offs, valuation
-- [ ] **6. Purchase orders**
+- [x] **6. Purchase orders**: drafts, GST, partial deliveries, weighted-average cost
 - [ ] **7. POS + GST invoice PDF**
 - [ ] **8. Returns + customers**
 - [ ] **9. Dashboard, reports, exports**

@@ -12,6 +12,9 @@ import { AdjustStockPage } from '@/pages/inventory/AdjustStockPage';
 import { InventoryPage } from '@/pages/inventory/InventoryPage';
 import { MovementsPage } from '@/pages/inventory/MovementsPage';
 import { CategoriesPage } from '@/pages/products/CategoriesPage';
+import { PurchaseOrderDetailPage } from '@/pages/purchases/PurchaseOrderDetailPage';
+import { PurchaseOrderFormPage } from '@/pages/purchases/PurchaseOrderFormPage';
+import { PurchasesPage } from '@/pages/purchases/PurchasesPage';
 import { ProductDetailPage } from '@/pages/products/ProductDetailPage';
 import { ProductFormPage } from '@/pages/products/ProductFormPage';
 import { ProductsPage } from '@/pages/products/ProductsPage';
@@ -25,7 +28,7 @@ const guard = (permission: Permission, page: ReactNode) => (
 );
 
 /** Modules built in later steps; each is already guarded by its permission. */
-const BUILT = ['/', '/users', '/products', '/suppliers', '/inventory'];
+const BUILT = ['/', '/users', '/products', '/suppliers', '/inventory', '/purchases'];
 const PLANNED = NAV_ITEMS.filter((item) => !BUILT.includes(item.to));
 
 function HomeRoute() {
@@ -59,6 +62,19 @@ export function App() {
           <Route path="inventory" element={guard('inventory:read', <InventoryPage />)} />
           <Route path="inventory/movements" element={guard('inventory:read', <MovementsPage />)} />
           <Route path="inventory/adjust" element={guard('inventory:adjust', <AdjustStockPage />)} />
+          <Route path="purchases" element={guard('purchases:read', <PurchasesPage />)} />
+          <Route
+            path="purchases/new"
+            element={guard('purchases:manage', <PurchaseOrderFormPage />)}
+          />
+          <Route
+            path="purchases/:id"
+            element={guard('purchases:read', <PurchaseOrderDetailPage />)}
+          />
+          <Route
+            path="purchases/:id/edit"
+            element={guard('purchases:manage', <PurchaseOrderFormPage />)}
+          />
           <Route path="suppliers" element={guard('purchases:read', <SuppliersPage />)} />
           <Route path="users" element={guard('users:manage', <UsersPage />)} />
           <Route path="account" element={<AccountPage />} />

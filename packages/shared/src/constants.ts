@@ -51,3 +51,28 @@ export const MOVEMENT_TYPE_LABELS: Readonly<Record<StockMovementType, string>> =
   purchase_return: 'Returned to supplier',
   adjustment: 'Adjustment',
 };
+
+export const PURCHASE_ORDER_STATUSES = [
+  'draft',
+  'ordered',
+  'partially_received',
+  'received',
+  'closed',
+  'cancelled',
+] as const;
+export type PurchaseOrderStatus = (typeof PURCHASE_ORDER_STATUSES)[number];
+
+export const PURCHASE_ORDER_STATUS_LABELS: Readonly<Record<PurchaseOrderStatus, string>> = {
+  draft: 'Draft',
+  ordered: 'Ordered',
+  partially_received: 'Partly received',
+  received: 'Received',
+  closed: 'Closed short',
+  cancelled: 'Cancelled',
+};
+
+/** Orders still expecting goods. */
+export const OPEN_PURCHASE_ORDER_STATUSES: readonly PurchaseOrderStatus[] = [
+  'ordered',
+  'partially_received',
+];

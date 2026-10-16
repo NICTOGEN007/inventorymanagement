@@ -1,4 +1,4 @@
-import type { CategoryDto, SupplierDto } from '@ims/shared';
+import type { CategoryDto, SettingsDto, SupplierDto } from '@ims/shared';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from './api';
 
@@ -19,5 +19,15 @@ export function useSuppliers({ enabled = true }: { enabled?: boolean } = {}) {
     select: (r) => r.data,
     staleTime: 5 * 60_000,
     enabled,
+  });
+}
+
+/** The shop's own details (name, GSTIN, state). Rarely changes, so cache it for the session. */
+export function useSettings() {
+  return useQuery({
+    queryKey: ['settings'],
+    queryFn: () => apiFetch<{ settings: SettingsDto }>('/settings'),
+    select: (r) => r.settings,
+    staleTime: Infinity,
   });
 }

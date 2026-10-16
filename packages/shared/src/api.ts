@@ -1,4 +1,10 @@
-import type { AdjustmentReason, Role, StockMovementType, Unit } from './constants.js';
+import type {
+  AdjustmentReason,
+  PurchaseOrderStatus,
+  Role,
+  StockMovementType,
+  Unit,
+} from './constants.js';
 import type { GstRate } from './gst.js';
 import type { StockStatus } from './pricing.js';
 import type { StateCode } from './states.js';
@@ -133,4 +139,77 @@ export interface InventorySummary extends InventoryValueRow {
   byCategory: (InventoryValueRow & { category: Ref })[];
   /** Stock written off (damaged, expired, lost) in the last 30 days, at cost. */
   writeOffs30d: { value: number; byReason: { reason: AdjustmentReason; value: number }[] };
+}
+
+export interface SettingsDto {
+  shopName: string;
+  legalName?: string;
+  gstin: string;
+  stateCode: StateCode;
+  address?: { line1?: string; line2?: string; city?: string; pincode?: string };
+  phone?: string;
+  email?: string;
+  invoicePrefix: string;
+  purchaseOrderPrefix: string;
+  returnPrefix: string;
+  invoiceFooter?: string;
+}
+
+export interface TaxAmounts {
+  /** Paise. */
+  taxable: number;
+  cgst: number;
+  sgst: number;
+  igst: number;
+  total: number;
+}
+
+export interface PurchaseOrderItemDto extends TaxAmounts {
+  product: { id: string; name: string; sku: string; unit: Unit };
+  quantity: number;
+  receivedQuantity: number;
+  /** Still to arrive. */
+  remainingQuantity: number;
+  unitCost: number;
+  gstRate: number;
+}
+
+export interface PurchaseOrderReceiptDto {
+  receivedAt: string;
+  receivedBy?: Ref;
+  supplierInvoiceNumber?: string;
+  note?: string;
+  items: { product: Ref; quantity: number }[];
+}
+
+export interface PurchaseOrderSummaryDto extends TaxAmounts {
+  id: string;
+  poNumber: string;
+  supplier: Ref;
+  status: PurchaseOrderStatus;
+  interState: boolean;
+  itemCount: number;
+  orderedAt?: string;
+  expectedAt?: string;
+  /** Still expecting goods and past the expected date. */
+  overdue: boolean;
+  createdAt: string;
+}
+
+export interface PurchaseOrderDto extends PurchaseOrderSummaryDto {
+  supplierDetails: {
+    name: string;
+    gstin?: string;
+    stateCode: StateCode;
+    phone?: string;
+    email?: string;
+    leadTimeDays: number;
+  };
+  items: PurchaseOrderItemDto[];
+  receipts: PurchaseOrderReceiptDto[];
+  notes?: string;
+  receivedAt?: string;
+  cancelledAt?: string;
+  cancelReason?: string;
+  createdBy?: Ref;
 }

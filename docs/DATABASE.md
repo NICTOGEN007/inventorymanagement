@@ -34,6 +34,7 @@ erDiagram
   SALE_RETURN ||--|{ RETURN_ITEM : contains
 
   PURCHASE_ORDER ||--|{ PO_ITEM : contains
+  PURCHASE_ORDER ||--o{ PO_RECEIPT : "delivered in"
 
   SALE ||--o{ STOCK_MOVEMENT : causes
   PURCHASE_ORDER ||--o{ STOCK_MOVEMENT : causes
@@ -163,6 +164,12 @@ erDiagram
     date orderedAt
     date expectedAt
     date receivedAt
+  }
+  PO_RECEIPT {
+    date receivedAt
+    ObjectId receivedBy FK
+    string supplierInvoiceNumber
+    array items "product + quantity"
   }
   PO_ITEM {
     ObjectId product FK
