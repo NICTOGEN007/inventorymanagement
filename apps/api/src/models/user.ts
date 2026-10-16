@@ -12,18 +12,7 @@ const userSchema = new Schema(
     isActive: { type: Boolean, default: true },
     lastLoginAt: Date,
   },
-  {
-    ...baseOptions,
-    toJSON: {
-      virtuals: true,
-      transform(_doc, ret) {
-        const json = ret as Record<string, unknown>;
-        delete json._id;
-        delete json.passwordHash;
-        return json;
-      },
-    },
-  },
+  baseOptions,
 );
 
 export type User = InferSchemaType<typeof userSchema>;

@@ -105,7 +105,7 @@ The ER diagram and design decisions are in [DATABASE.md](DATABASE.md).
 
 - [x] **1. Scaffolding**: monorepo, tooling, Docker Compose, CI, README, health check
 - [x] **2. Data models + seed data** (with ER diagram): see [DATABASE.md](DATABASE.md)
-- [ ] **3. Auth + roles**
+- [x] **3. Auth + roles**: see [AUTH.md](AUTH.md)
 - [ ] **4. Products, categories, suppliers** (API + UI)
 - [ ] **5. Inventory ledger + stock adjustments**
 - [ ] **6. Purchase orders**

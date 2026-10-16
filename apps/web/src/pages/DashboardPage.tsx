@@ -1,8 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
-import { APP_NAME } from '@ims/shared';
+import { useAuth } from '@/auth/AuthProvider';
+import { Card } from '@/components/ui/Card';
 import { apiFetch, type HealthResponse } from '@/lib/api';
 
+function greeting(hour: number) {
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
 export function DashboardPage() {
+  const { user } = useAuth();
   const health = useQuery({
     queryKey: ['health'],
     queryFn: () => apiFetch<HealthResponse>('/health'),
@@ -19,12 +27,15 @@ export function DashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{APP_NAME}</p>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          {greeting(new Date().getHours())}, {user?.name.split(' ')[0]}. Sales and stock insights
+          arrive in step 9.
+        </p>
       </div>
-      <div className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-800 dark:bg-slate-900">
+      <Card className="inline-flex items-center gap-2 px-4 py-3 text-sm">
         <span className={`size-2.5 rounded-full ${status.className}`} aria-hidden />
         <span role="status">{status.label}</span>
-      </div>
+      </Card>
     </div>
   );
 }

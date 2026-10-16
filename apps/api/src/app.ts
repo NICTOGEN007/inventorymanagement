@@ -1,10 +1,11 @@
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import { pinoHttp } from 'pino-http';
 import { env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
-import { apiRouter } from './routes/index.js';
+import { createApiRouter } from './routes/index.js';
 import { logger } from './utils/logger.js';
 
 export function createApp() {
@@ -16,9 +17,10 @@ export function createApp() {
   app.use(helmet());
   app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
   app.use(express.json({ limit: '1mb' }));
+  app.use(cookieParser());
   app.use(pinoHttp({ logger, autoLogging: env.NODE_ENV !== 'test' }));
 
-  app.use('/api', apiRouter);
+  app.use('/api', createApiRouter());
 
   app.use(notFoundHandler);
   app.use(errorHandler);

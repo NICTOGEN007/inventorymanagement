@@ -6,6 +6,7 @@ export * from './product.js';
 export * from './purchase-order.js';
 export * from './sale.js';
 export * from './sale-return.js';
+export * from './session.js';
 export * from './settings.js';
 export * from './stock-movement.js';
 export * from './supplier.js';

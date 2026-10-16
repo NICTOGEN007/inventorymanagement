@@ -5,8 +5,8 @@ GST-compliant invoicing, AI demand forecasting and an AI assistant.
 
 Built with the **MERN** stack in TypeScript: MongoDB, Express, React and Node.js.
 
-> **Status:** Steps 1–2 of 10 are complete: project scaffolding, and the database models with
-> realistic demo data. See the roadmap in
+> **Status:** Steps 1–3 of 10 are complete: project scaffolding, database models with realistic
+> demo data, and sign-in with role-based access. See the roadmap in
 > [docs/PLAN.md](docs/PLAN.md).
 
 ## Features (planned)
@@ -42,15 +42,17 @@ Built with the **MERN** stack in TypeScript: MongoDB, Express, React and Node.js
 │   │   ├── src/
 │   │   │   ├── config/      # environment variable validation
 │   │   │   ├── db/          # MongoDB connection
-│   │   │   ├── middleware/  # error handling, auth (later)
+│   │   │   ├── middleware/  # error handling, authentication, permissions
 │   │   │   ├── models/      # Mongoose schemas (see docs/DATABASE.md)
+│   │   │   ├── modules/     # features: auth, users, … (routes + services)
 │   │   │   ├── routes/      # route definitions
 │   │   │   ├── seed/        # demo data generator
 │   │   │   └── utils/       # logger, errors, passwords
 │   │   └── test/
 │   └── web/            # React frontend
 │       ├── src/
-│       │   ├── components/
+│       │   ├── auth/        # session handling, route guards
+│       │   ├── components/  # layout and UI building blocks
 │       │   ├── lib/         # API client, theme
 │       │   └── pages/
 │       └── test/
@@ -134,23 +136,32 @@ afterwards). Without internet access, point it at an installed `mongod` instead:
 
 ## Environment variables (API)
 
-| Variable      | Default                                                                    | Description                              |
-| ------------- | -------------------------------------------------------------------------- | ---------------------------------------- |
-| `NODE_ENV`    | `development`                                                              | `development`, `test` or `production`    |
-| `PORT`        | `4000`                                                                     | HTTP port                                |
-| `MONGODB_URI` | `mongodb://localhost:27017/inventory?replicaSet=rs0&directConnection=true` | MongoDB connection string                |
-| `CORS_ORIGIN` | `http://localhost:5173`                                                    | Allowed browser origins, comma-separated |
-| `LOG_LEVEL`   | `info`                                                                     | Pino log level                           |
+| Variable                   | Default                                                                    | Description                                         |
+| -------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------- |
+| `NODE_ENV`                 | `development`                                                              | `development`, `test` or `production`               |
+| `PORT`                     | `4000`                                                                     | HTTP port                                           |
+| `MONGODB_URI`              | `mongodb://localhost:27017/inventory?replicaSet=rs0&directConnection=true` | MongoDB connection string                           |
+| `CORS_ORIGIN`              | `http://localhost:5173`                                                    | Allowed browser origins, comma-separated            |
+| `LOG_LEVEL`                | `info`                                                                     | Pino log level                                      |
+| `JWT_ACCESS_SECRET`        | dev-only value                                                             | **Required in production** (`openssl rand -hex 32`) |
+| `ACCESS_TOKEN_TTL_SECONDS` | `900`                                                                      | Access token lifetime                               |
+| `REFRESH_TOKEN_TTL_DAYS`   | `7`                                                                        | How long a sign-in lasts without activity           |
+| `COOKIE_SECURE`            | `true` in production                                                       | Refresh cookie over HTTPS only                      |
+| `COOKIE_SAME_SITE`         | `strict`                                                                   | `none` only if web and API are on different sites   |
 
 ## API
 
-| Method | Path          | Description                                            |
-| ------ | ------------- | ------------------------------------------------------ |
-| GET    | `/api/health` | Service and database status (`200` ok, `503` degraded) |
+| Method | Path              | Description                                                 |
+| ------ | ----------------- | ----------------------------------------------------------- |
+| GET    | `/api/health`     | Service and database status (`200` ok, `503` degraded)      |
+| POST   | `/api/auth/login` | Sign in (also `refresh`, `logout`, `me`, `change-password`) |
+| GET    | `/api/users`      | Manage staff accounts (admin only)                          |
 
-Errors always have the shape `{ "error": { "code": "...", "message": "..." } }`.
+Full details, including error codes, are in [docs/AUTH.md](docs/AUTH.md#api). Errors always have
+the shape `{ "error": { "code": "...", "message": "..." } }`.
 
 ## Documentation
 
 - [Project plan & roadmap](docs/PLAN.md)
 - [Database design & ER diagram](docs/DATABASE.md)
+- [Authentication, roles & security](docs/AUTH.md)

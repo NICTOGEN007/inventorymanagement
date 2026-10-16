@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 
-type Theme = 'light' | 'dark';
+export type Theme = 'light' | 'dark';
 const STORAGE_KEY = 'ims-theme';
+const listeners = new Set<() => void>();
 
-function initialTheme(): Theme {
+function readInitial(): Theme {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === 'light' || saved === 'dark') return saved;
@@ -13,18 +14,28 @@ function initialTheme(): Theme {
   return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
+let theme: Theme = readInitial();
+document.documentElement.classList.toggle('dark', theme === 'dark');
+
+export function setTheme(next: Theme) {
+  theme = next;
+  document.documentElement.classList.toggle('dark', next === 'dark');
+  try {
+    localStorage.setItem(STORAGE_KEY, next);
+  } catch {
+    // Ignore: the theme just won't persist.
+  }
+  listeners.forEach((listener) => listener());
+}
+
+/** Shared light/dark theme for the whole app, including the login page. */
 export function useTheme() {
-  const [theme, setTheme] = useState<Theme>(initialTheme);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    try {
-      localStorage.setItem(STORAGE_KEY, theme);
-    } catch {
-      // Ignore: theme just won't persist.
-    }
-  }, [theme]);
-
-  const toggle = useCallback(() => setTheme((t) => (t === 'dark' ? 'light' : 'dark')), []);
-  return { theme, toggle };
+  const current = useSyncExternalStore(
+    (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    () => theme,
+  );
+  return { theme: current, toggle: () => setTheme(current === 'dark' ? 'light' : 'dark') };
 }

@@ -1,13 +1,15 @@
 import { GST_RATES, INDIAN_STATES, isValidGstin } from '@ims/shared';
 import mongoose from 'mongoose';
 
-// JSON output for every model: an `id` string instead of `_id`, and no `__v`.
+// JSON output for every model: an `id` string instead of `_id`, no `__v`, and never a password hash.
 // Set globally because a typed transform in each schema's options defeats Mongoose type inference.
 mongoose.set('toJSON', {
   virtuals: true,
   versionKey: false,
   transform(_doc, ret) {
-    delete (ret as { _id?: unknown })._id;
+    const json = ret as { _id?: unknown; passwordHash?: unknown };
+    delete json._id;
+    delete json.passwordHash;
     return ret;
   },
 });

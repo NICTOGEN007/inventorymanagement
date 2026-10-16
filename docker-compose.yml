@@ -33,6 +33,11 @@ services:
       PORT: 4000
       MONGODB_URI: mongodb://mongo:27017/inventory?replicaSet=rs0&directConnection=true
       CORS_ORIGIN: http://localhost:8080
+      # Demo default so `docker compose up` works out of the box. For any real use, set your own:
+      #   JWT_ACCESS_SECRET=$(openssl rand -hex 32) docker compose up
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-demo-only-secret-replace-me-before-real-use-0123456789}
+      # The demo is served over plain HTTP; set to true behind HTTPS.
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
     ports:
       - '4000:4000'
     depends_on:
