@@ -2,3 +2,6 @@ node_modules
 dist
 coverage
 package-lock.json
+
+# Generated report and its generator scripts
+docs/report/source

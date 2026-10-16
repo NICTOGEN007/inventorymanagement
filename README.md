@@ -169,3 +169,4 @@ always have the shape `{ "error": { "code": "...", "message": "..." } }`.
 - [Database design & ER diagram](docs/DATABASE.md)
 - [Authentication, roles & security](docs/AUTH.md)
 - [REST API reference](docs/API.md)
+- [Project report (VTU format, Word + PDF)](docs/report/README.md)
