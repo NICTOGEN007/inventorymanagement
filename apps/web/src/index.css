@@ -1,0 +1,15 @@
+@import 'tailwindcss';
+
+/* Dark mode follows a `dark` class on <html>, set by the theme toggle. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
