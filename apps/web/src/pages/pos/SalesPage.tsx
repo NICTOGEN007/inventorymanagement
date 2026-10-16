@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
+import { SaleStatusBadge } from '@/components/SaleStatusBadge';
 import { ErrorAlert } from '@/components/ui/Alert';
 import { Card } from '@/components/ui/Card';
 import { Input, Select } from '@/components/ui/Input';
@@ -12,20 +13,10 @@ import { Spinner } from '@/components/ui/Spinner';
 import { StatTile } from '@/components/ui/StatTile';
 import { apiFetch } from '@/lib/api';
 import { cn } from '@/lib/cn';
-import { formatDateTime, istDateInput } from '@/lib/format';
+import { formatDateTime } from '@/lib/format';
 import { useUrlFilters } from '@/lib/useUrlFilters';
+import { PeriodChips } from './PeriodChips';
 import { POS_TABS } from './tabs';
-
-function ranges() {
-  const today = istDateInput(0);
-  return [
-    { label: 'Today', from: today, to: today },
-    { label: 'Yesterday', from: istDateInput(-1), to: istDateInput(-1) },
-    { label: 'Last 7 days', from: istDateInput(-6), to: today },
-    { label: 'This month', from: `${today.slice(0, 8)}01`, to: today },
-    { label: 'All', from: '', to: '' },
-  ];
-}
 
 export function SalesPage() {
   const { params, update } = useUrlFilters();
@@ -61,27 +52,7 @@ export function SalesPage() {
         tabs={POS_TABS}
       />
 
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Period">
-        {ranges().map((r) => {
-          const selected = r.from === from && r.to === to;
-          return (
-            <button
-              key={r.label}
-              type="button"
-              aria-pressed={selected}
-              onClick={() => update({ from: r.from || null, to: r.to || null })}
-              className={cn(
-                'rounded-full border px-3 py-1 text-sm',
-                selected
-                  ? 'border-indigo-600 bg-indigo-600 text-white'
-                  : 'border-slate-300 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800',
-              )}
-            >
-              {r.label}
-            </button>
-          );
-        })}
-      </div>
+      <PeriodChips from={from} to={to} onChange={update} />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="relative sm:col-span-2 lg:col-span-1">
@@ -178,7 +149,8 @@ export function SalesPage() {
                           className="font-medium hover:text-indigo-600 dark:hover:text-indigo-400"
                         >
                           {s.invoiceNumber}
-                        </Link>
+                        </Link>{' '}
+                        <SaleStatusBadge status={s.status} />
                         <div className="text-xs text-slate-500 dark:text-slate-400">
                           {s.customer?.name ?? 'Walk-in customer'} · {s.itemCount}{' '}
                           {s.itemCount === 1 ? 'item' : 'items'}

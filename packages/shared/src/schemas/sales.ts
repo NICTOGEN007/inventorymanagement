@@ -73,6 +73,8 @@ export const saleListQuerySchema = z
     search: z.string().trim().max(60).optional(),
     method: z.enum(PAYMENT_METHODS).optional(),
     cashier: objectId.optional(),
+    /** A customer's purchase history. */
+    customer: objectId.optional(),
     page: z.coerce.number().int().min(1).default(1),
     pageSize: z.coerce.number().int().min(1).max(100).default(20),
   })
@@ -82,9 +84,57 @@ export const saleListQuerySchema = z
   });
 export type SaleListQuery = z.output<typeof saleListQuerySchema>;
 
-export const customerListQuerySchema = z.object({
-  search: z.string().trim().max(60).optional(),
-  page: z.coerce.number().int().min(1).default(1),
-  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+// ---------------------------------------------------------------------------
+// Returns
+
+const returnQuantity = z
+  .number('Enter a quantity')
+  .positive('Quantity must be more than 0')
+  .refine(threeDecimals, 'At most 3 decimal places');
+
+export const saleReturnItemInputSchema = z.object({
+  product: objectId,
+  quantity: returnQuantity,
+  /** Goods in sellable condition go back on the shelf; damaged ones do not. */
+  restock: z.boolean().default(true),
 });
-export type CustomerListQuery = z.output<typeof customerListQuerySchema>;
+
+export const saleReturnInputSchema = z.object({
+  /** The original sale; a return is always against an invoice. */
+  sale: objectId,
+  items: z
+    .array(saleReturnItemInputSchema)
+    .min(1, 'Choose at least one item to return')
+    .max(200, 'At most 200 lines')
+    .refine(
+      (items) => new Set(items.map((i) => i.product)).size === items.length,
+      'Each product can appear only once',
+    ),
+  refundMethod: z.enum(PAYMENT_METHODS, 'Choose how the money goes back'),
+  /** UPI transaction id or card reversal reference. */
+  refundReference: optionalText(60),
+  reason: z.string().trim().min(3, 'Give a short reason').max(300),
+  /** Same idea as on a sale: sending the same return twice takes the goods back once. */
+  clientRef: z
+    .string()
+    .regex(/^[A-Za-z0-9-]{8,64}$/, 'Invalid return reference')
+    .optional(),
+});
+export type SaleReturnInput = z.output<typeof saleReturnInputSchema>;
+
+export const saleReturnListQuerySchema = z
+  .object({
+    from: dateKey.optional(),
+    to: dateKey.optional(),
+    /** Return number, invoice number or customer name. */
+    search: z.string().trim().max(60).optional(),
+    customer: objectId.optional(),
+    sale: objectId.optional(),
+    page: z.coerce.number().int().min(1).default(1),
+    pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  })
+  .refine((q) => !q.from || !q.to || q.from <= q.to, {
+    message: 'The start date must be before the end date',
+    path: ['to'],
+  });
+export type SaleReturnListQuery = z.output<typeof saleReturnListQuerySchema>;

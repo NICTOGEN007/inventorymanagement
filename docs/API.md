@@ -187,12 +187,12 @@ products, so the same goods are never ordered twice.
 
 ## Sales (point of sale)
 
-| Method | Path                     | Permission     | Description                                                                  |
-| ------ | ------------------------ | -------------- | ---------------------------------------------------------------------------- |
-| POST   | `/sales`                 | `sales:create` | Bill a customer: prices, GST, invoice number and stock in one transaction    |
-| GET    | `/sales`                 | `sales:read`   | Newest first; `from`/`to` (IST dates), `search`, `method`, `cashier`, paging |
-| GET    | `/sales/:id`             | `sales:read`   | Full invoice with lines, tax and payments                                    |
-| GET    | `/sales/:id/invoice.pdf` | `sales:read`   | GST tax invoice as a PDF (A4)                                                |
+| Method | Path                     | Permission     | Description                                                                              |
+| ------ | ------------------------ | -------------- | ---------------------------------------------------------------------------------------- |
+| POST   | `/sales`                 | `sales:create` | Bill a customer: prices, GST, invoice number and stock in one transaction                |
+| GET    | `/sales`                 | `sales:read`   | Newest first; `from`/`to` (IST dates), `search`, `method`, `cashier`, `customer`, paging |
+| GET    | `/sales/:id`             | `sales:read`   | Full invoice with lines, tax, payments, refunds and its credit notes                     |
+| GET    | `/sales/:id/invoice.pdf` | `sales:read`   | GST tax invoice as a PDF (A4)                                                            |
 
 Body:
 
@@ -222,10 +222,55 @@ Body:
 
 The list also returns `summary: { count, total }` for everything that matches the filters.
 
+## Returns (credit notes)
+
+| Method | Path                           | Permission       | Description                                                                                 |
+| ------ | ------------------------------ | ---------------- | ------------------------------------------------------------------------------------------- |
+| POST   | `/returns`                     | `returns:create` | Take goods back against an invoice: refund, credit note and stock at once                   |
+| GET    | `/returns`                     | `sales:read`     | Newest first; `from`/`to`, `search` (return, invoice, customer), `customer`, `sale`, paging |
+| GET    | `/returns/:id`                 | `sales:read`     | Credit note with lines, tax reversed and refund                                             |
+| GET    | `/returns/:id/credit-note.pdf` | `sales:read`     | GST credit note as a PDF (A4)                                                               |
+
+Body:
+
+```json
+{
+  "sale": "<sale id>",
+  "items": [{ "product": "<id>", "quantity": 1, "restock": false }],
+  "refundMethod": "upi",
+  "refundReference": "412345678901",
+  "reason": "Damaged or defective",
+  "clientRef": "7d0e1f2a-3b4c-4f6a-8b7c-f3c1b2a40d5e"
+}
+```
+
+- A return is always against an invoice, and a line can come back in parts until all of it has.
+  More than is left answers 400 on that line (`details[0].path = ["items", 0, "quantity"]`).
+- Each line refunds its share of what has **not been refunded yet**, so the parts of a line add up
+  to exactly what the customer paid for it. The refund is rounded to the rupee like the invoice;
+  the return that takes back the last item refunds exactly what is left of the bill.
+- Tax is reversed the way it was charged: CGST + SGST, or IGST for another state.
+- `restock` (default `true`) puts the goods back on the shelf with a `sale_return` stock movement
+  at the cost they were sold at. Damaged goods (`false`) stay off the shelf.
+- The sale becomes `partially_returned` or `returned`. Credit notes are numbered gap-free per
+  financial year: `RET/26-27/00007`.
+- Two returns of the same bill at once cannot take back more than was sold: they run in
+  transactions on the sale, and the later one is checked again.
+- `clientRef` works as on a sale: resending a return answers with the credit note already issued.
+
+The list also returns `summary: { count, total }` (number of returns and total refunded).
+
 ## Customers
 
-| Method | Path         | Permission       | Description                                                 |
-| ------ | ------------ | ---------------- | ----------------------------------------------------------- |
-| GET    | `/customers` | `customers:read` | Active customers by `search` (name, phone or GSTIN), paging |
+| Method | Path             | Permission        | Description                                                                                       |
+| ------ | ---------------- | ----------------- | ------------------------------------------------------------------------------------------------- |
+| GET    | `/customers`     | `customers:read`  | `search` (name, phone, GSTIN), `status` (`active`/`inactive`/`all`), paging; with bills and spend |
+| GET    | `/customers/:id` | `customers:read`  | Profile, spend net of refunds, average bill, returns, top 5 products                              |
+| POST   | `/customers`     | `customers:write` | Add a customer                                                                                    |
+| PUT    | `/customers/:id` | `customers:write` | Replace the editable fields; `isActive: false` hides them from the till                           |
+| DELETE | `/customers/:id` | `customers:write` | Only for a customer never billed (409 otherwise: deactivate instead)                              |
 
-Adding and editing customers comes with returns in step 8.
+Body: `name`, and optionally `phone` (10-digit mobile, unique), `email`, `gstin`, `stateCode`,
+`address { line1, line2, city, pincode }`, `isActive`. A GSTIN sets the state when none is given
+and must match it. No state means a local customer (the shop's own state, so CGST + SGST).
+A customer's bills are `GET /sales?customer=<id>` and their returns `GET /returns?customer=<id>`.

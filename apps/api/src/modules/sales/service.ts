@@ -22,6 +22,7 @@ import {
   nextSequence,
   ProductModel,
   SaleModel,
+  SaleReturnModel,
   UserModel,
   type Sale,
 } from '../../models/index.js';
@@ -225,7 +226,7 @@ export async function createSale(
   return { sale: await getSale(String(id)), created: true };
 }
 
-function customerOf(s: SaleDoc) {
+export function customerOf(s: Pick<SaleDoc, 'customer' | 'customerSnapshot'>) {
   const snap = s.customerSnapshot;
   if (!snap?.name) return undefined;
   return {
@@ -253,7 +254,7 @@ function toSummary(s: SaleDoc, cashierName: string): SaleSummaryDto {
   };
 }
 
-async function cashierNames(ids: Types.ObjectId[]): Promise<Map<string, string>> {
+export async function cashierNames(ids: Types.ObjectId[]): Promise<Map<string, string>> {
   const users = await UserModel.find({ _id: { $in: ids } }, { name: 1 }).lean();
   return new Map(users.map((u) => [String(u._id), u.name]));
 }
@@ -276,6 +277,7 @@ function listFilter(query: SaleListQuery) {
   }
   if (query.method) filter['payments.method'] = query.method;
   if (query.cashier) filter.cashier = toObjectId(query.cashier);
+  if (query.customer) filter.customer = toObjectId(query.customer);
   return filter;
 }
 
@@ -306,7 +308,12 @@ export async function listSales(query: SaleListQuery): Promise<SaleList> {
 export async function getSale(id: string): Promise<SaleDto> {
   const s = await SaleModel.findById(toObjectId(id, 'Sale not found')).lean<SaleDoc>();
   if (!s) throw AppError.notFound('Sale not found');
-  const names = await cashierNames([s.cashier]);
+  const [names, returns] = await Promise.all([
+    cashierNames([s.cashier]),
+    SaleReturnModel.find({ sale: s._id }, { returnNumber: 1, returnedAt: 1, totalRefund: 1 })
+      .sort({ returnedAt: 1, _id: 1 })
+      .lean(),
+  ]);
   const { paymentMethods: _methods, ...summary } = toSummary(
     s,
     names.get(String(s.cashier)) ?? 'Unknown',
@@ -330,6 +337,12 @@ export async function getSale(id: string): Promise<SaleDto> {
       igst: i.igst,
       total: i.total,
       returnedQuantity: i.returnedQuantity,
+      refunded: {
+        taxable: i.refunded?.taxable ?? 0,
+        cgst: i.refunded?.cgst ?? 0,
+        sgst: i.refunded?.sgst ?? 0,
+        igst: i.refunded?.igst ?? 0,
+      },
     })),
     gross: s.gross,
     discount: s.discount,
@@ -344,5 +357,12 @@ export async function getSale(id: string): Promise<SaleDto> {
       ...(p.reference && { reference: p.reference }),
     })),
     ...(s.notes && { notes: s.notes }),
+    refundedTotal: s.refundedTotal ?? 0,
+    returns: returns.map((r) => ({
+      id: String(r._id),
+      returnNumber: r.returnNumber,
+      returnedAt: iso(r.returnedAt),
+      totalRefund: r.totalRefund,
+    })),
   };
 }

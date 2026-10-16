@@ -1,43 +1,22 @@
-import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import {
   amountInWords,
   formatINR,
-  getStateName,
   hsnSummary,
   PAYMENT_METHOD_LABELS,
   type SaleDto,
   type SettingsDto,
 } from '@ims/shared';
-import PDFDocument from 'pdfkit';
-
-/** Finds assets/fonts both from the source tree (tsx) and from the bundled build (dist). */
-function fontDir(): string {
-  let dir = dirname(fileURLToPath(import.meta.url));
-  for (let i = 0; i < 6; i++) {
-    const candidate = join(dir, 'assets', 'fonts');
-    if (existsSync(candidate)) return candidate;
-    dir = dirname(dir);
-  }
-  throw new Error('Invoice fonts not found (expected apps/api/assets/fonts)');
-}
-const FONTS = fontDir();
-
-const PAGE = { width: 595.28, height: 841.89, margin: 36 };
-const INK = '#0f172a';
-const MUTED = '#475569';
-const RULE = '#cbd5e1';
-const HEAD_FILL = '#f1f5f9';
-
-const dateTime = new Intl.DateTimeFormat('en-IN', {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-  timeZone: 'Asia/Kolkata',
-});
-const qty = (n: number) => Number(n.toFixed(3)).toLocaleString('en-IN');
-const money = (paise: number) => formatINR(paise).replace('₹', '');
-const stateLabel = (code: string) => `${getStateName(code) ?? 'State'} (${code})`;
+import {
+  createPdf,
+  formatPdfDate,
+  HEAD_FILL,
+  INK,
+  money,
+  MUTED,
+  PAGE,
+  qty,
+  stateLabel,
+} from '../../utils/pdf.js';
 
 interface Column {
   label: string;
@@ -51,50 +30,12 @@ interface Column {
  * summary. CGST + SGST for sales within the state, IGST across states.
  */
 export function renderInvoicePdf(sale: SaleDto, shop: SettingsDto): Promise<Buffer> {
-  const doc = new PDFDocument({
-    size: 'A4',
-    margin: PAGE.margin,
-    info: {
-      Title: `Tax invoice ${sale.invoiceNumber}`,
-      Author: shop.legalName ?? shop.shopName,
-      Subject: `Invoice ${sale.invoiceNumber} for ${formatINR(sale.grandTotal)}`,
-    },
+  const { doc, done, text, hr, layout } = createPdf({
+    Title: `Tax invoice ${sale.invoiceNumber}`,
+    Author: shop.legalName ?? shop.shopName,
+    Subject: `Invoice ${sale.invoiceNumber} for ${formatINR(sale.grandTotal)}`,
   });
-  doc.registerFont('regular', join(FONTS, 'Inter-Regular.otf'));
-  doc.registerFont('bold', join(FONTS, 'Inter-SemiBold.otf'));
-
-  const chunks: Buffer[] = [];
-  doc.on('data', (chunk: Buffer) => chunks.push(chunk));
-  const done = new Promise<Buffer>((resolve, reject) => {
-    doc.on('end', () => resolve(Buffer.concat(chunks)));
-    doc.on('error', reject);
-  });
-
-  const left = PAGE.margin;
-  const right = PAGE.width - PAGE.margin;
-  const width = right - left;
-  const bottom = PAGE.height - PAGE.margin - 24;
-  const text = (
-    value: string,
-    x: number,
-    y: number,
-    opts: PDFKit.Mixins.TextOptions & {
-      font?: 'regular' | 'bold';
-      size?: number;
-      color?: string;
-    } = {},
-  ) => {
-    const { font = 'regular', size = 9, color = INK, ...rest } = opts;
-    doc
-      .font(font)
-      .fontSize(size)
-      .fillColor(color)
-      .text(value, x, y, { lineGap: 1.5, ...rest });
-    return doc.y;
-  };
-  const hr = (y: number, color = RULE) => {
-    doc.moveTo(left, y).lineTo(right, y).lineWidth(0.6).strokeColor(color).stroke();
-  };
+  const { left, right, width, bottom } = layout;
 
   // --- Header: seller --------------------------------------------------------------------
   let y = PAGE.margin;
@@ -136,7 +77,7 @@ export function renderInvoicePdf(sale: SaleDto, shop: SettingsDto): Promise<Buff
 
   const details: [string, string][] = [
     ['Invoice no.', sale.invoiceNumber],
-    ['Date', dateTime.format(new Date(sale.soldAt))],
+    ['Date', formatPdfDate(sale.soldAt)],
     ['Place of supply', stateLabel(sale.placeOfSupply)],
     ['Cashier', sale.cashier.name],
   ];

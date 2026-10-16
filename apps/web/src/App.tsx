@@ -11,7 +11,12 @@ import { NotFoundPage } from '@/pages/NotFoundPage';
 import { AdjustStockPage } from '@/pages/inventory/AdjustStockPage';
 import { InventoryPage } from '@/pages/inventory/InventoryPage';
 import { MovementsPage } from '@/pages/inventory/MovementsPage';
+import { CustomerDetailPage } from '@/pages/customers/CustomerDetailPage';
+import { CustomersPage } from '@/pages/customers/CustomersPage';
 import { PosPage } from '@/pages/pos/PosPage';
+import { ReturnDetailPage } from '@/pages/pos/ReturnDetailPage';
+import { ReturnFormPage } from '@/pages/pos/ReturnFormPage';
+import { ReturnsPage } from '@/pages/pos/ReturnsPage';
 import { SaleDetailPage } from '@/pages/pos/SaleDetailPage';
 import { SalesPage } from '@/pages/pos/SalesPage';
 import { CategoriesPage } from '@/pages/products/CategoriesPage';
@@ -31,7 +36,16 @@ const guard = (permission: Permission, page: ReactNode) => (
 );
 
 /** Modules built in later steps; each is already guarded by its permission. */
-const BUILT = ['/', '/pos', '/users', '/products', '/suppliers', '/inventory', '/purchases'];
+const BUILT = [
+  '/',
+  '/pos',
+  '/users',
+  '/products',
+  '/suppliers',
+  '/inventory',
+  '/purchases',
+  '/customers',
+];
 const PLANNED = NAV_ITEMS.filter((item) => !BUILT.includes(item.to));
 
 function HomeRoute() {
@@ -60,6 +74,14 @@ export function App() {
           <Route path="pos" element={guard('sales:create', <PosPage />)} />
           <Route path="pos/sales" element={guard('sales:read', <SalesPage />)} />
           <Route path="pos/sales/:id" element={guard('sales:read', <SaleDetailPage />)} />
+          <Route
+            path="pos/sales/:id/return"
+            element={guard('returns:create', <ReturnFormPage />)}
+          />
+          <Route path="pos/returns" element={guard('sales:read', <ReturnsPage />)} />
+          <Route path="pos/returns/:id" element={guard('sales:read', <ReturnDetailPage />)} />
+          <Route path="customers" element={guard('customers:read', <CustomersPage />)} />
+          <Route path="customers/:id" element={guard('customers:read', <CustomerDetailPage />)} />
           <Route path="products" element={guard('products:read', <ProductsPage />)} />
           <Route path="products/new" element={guard('products:write', <ProductFormPage />)} />
           <Route path="products/categories" element={guard('products:read', <CategoriesPage />)} />

@@ -2,6 +2,16 @@ import { PAYMENT_METHODS, SALE_STATUSES, UNITS } from '@ims/shared';
 import { model, Schema, type InferSchemaType } from 'mongoose';
 import { baseOptions, gstRate, paise, quantity, signedPaise, stateCode } from './common.js';
 
+const refundedSchema = new Schema(
+  {
+    taxable: { ...paise, default: 0 },
+    cgst: { ...paise, default: 0 },
+    sgst: { ...paise, default: 0 },
+    igst: { ...paise, default: 0 },
+  },
+  { _id: false },
+);
+
 /**
  * A line on the invoice. Product details are copied at the time of sale so that
  * later edits to the product never change an issued invoice.
@@ -26,6 +36,11 @@ const saleItemSchema = new Schema(
     /** Cost per unit (excl. GST) at the time of sale, for profit reports. */
     unitCost: paise,
     returnedQuantity: { type: Number, required: true, default: 0, min: 0 },
+    /** Taxable value and GST refunded on returns so far, so later returns refund only the rest. */
+    refunded: {
+      type: refundedSchema,
+      default: () => ({}),
+    },
   },
   { _id: false },
 );
@@ -76,6 +91,8 @@ const saleSchema = new Schema(
         message: 'At least one payment is required',
       },
     },
+    /** Paid back on returns so far; never more than the grand total. */
+    refundedTotal: { ...paise, default: 0 },
     status: { type: String, enum: SALE_STATUSES, required: true, default: 'completed' },
     cashier: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     soldAt: { type: Date, required: true, default: Date.now },

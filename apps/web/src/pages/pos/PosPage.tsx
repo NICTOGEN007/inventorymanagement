@@ -6,8 +6,10 @@ import {
   type SaleDto,
 } from '@ims/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Minus, Plus, ReceiptText, Trash2, UserRound, X } from 'lucide-react';
+import { Minus, Plus, ReceiptText, Trash2, UserPlus, UserRound, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useAuth } from '@/auth/AuthProvider';
+import { CustomerFormDialog } from '@/components/CustomerFormDialog';
 import { CustomerPicker } from '@/components/CustomerPicker';
 import { ProductPicker } from '@/components/ProductPicker';
 import { ErrorAlert } from '@/components/ui/Alert';
@@ -56,6 +58,8 @@ export function PosPage() {
   const [lineErrors, setLineErrors] = useState<Record<string, string>>({});
   const [completed, setCompleted] = useState<Completed | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [addingCustomer, setAddingCustomer] = useState(false);
+  const { can } = useAuth();
   const pickerBox = useRef<HTMLDivElement>(null);
 
   /** Ready for the next customer: the scanner types into the product search again. */
@@ -361,6 +365,12 @@ export function PosPage() {
                   <UserRound className="size-4" aria-hidden /> Walk-in customer
                 </p>
                 <CustomerPicker onSelect={(customer) => setCart((c) => ({ ...c, customer }))} />
+                {can('customers:write') && (
+                  <Button variant="ghost" size="sm" onClick={() => setAddingCustomer(true)}>
+                    <UserPlus className="size-4" aria-hidden />
+                    New customer
+                  </Button>
+                )}
               </>
             )}
           </Card>
@@ -506,6 +516,26 @@ export function PosPage() {
         billed yet.
       </ConfirmDialog>
 
+      <CustomerFormDialog
+        customer={null}
+        open={addingCustomer}
+        onClose={() => {
+          setAddingCustomer(false);
+          focusPicker();
+        }}
+        onSaved={(saved) =>
+          setCart((c) => ({
+            ...c,
+            customer: {
+              id: saved.id,
+              name: saved.name,
+              ...(saved.phone && { phone: saved.phone }),
+              ...(saved.gstin && { gstin: saved.gstin }),
+              ...(saved.stateCode && { stateCode: saved.stateCode }),
+            },
+          }))
+        }
+      />
       <SaleCompleteDialog
         completed={completed}
         onClose={() => {

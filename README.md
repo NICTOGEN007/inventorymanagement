@@ -5,9 +5,9 @@ GST-compliant invoicing, AI demand forecasting and an AI assistant.
 
 Built with the **MERN** stack in TypeScript: MongoDB, Express, React and Node.js.
 
-> **Status:** Steps 1–7 of 10 are complete: scaffolding, database and demo data, sign-in with
-> roles, the product catalogue, inventory, purchase orders with deliveries, and the point of sale
-> with GST invoices. See the roadmap in [docs/PLAN.md](docs/PLAN.md).
+> **Status:** Steps 1–8 of 10 are complete: scaffolding, database and demo data, sign-in with
+> roles, the product catalogue, inventory, purchase orders with deliveries, the point of sale
+> with GST invoices, and customer returns with credit notes and customer profiles. See the roadmap in [docs/PLAN.md](docs/PLAN.md).
 
 ## Features (planned)
 
@@ -159,7 +159,9 @@ afterwards). Without internet access, point it at an installed `mongod` instead:
 | Catalogue              | `/api/products`, `/api/categories`, `/api/suppliers`                     |
 | Inventory              | `/api/inventory/movements`, `summary`, `adjustments`                     |
 | Purchasing             | `/api/purchase-orders` (create, place, receive, cancel), `/api/settings` |
-| Point of sale          | `/api/sales` (bill, list, invoice PDF), `/api/customers` (lookup)        |
+| Point of sale          | `/api/sales` (bill, list, invoice PDF)                                   |
+| Returns                | `/api/returns` (take back, list, credit note PDF)                        |
+| Customers              | `/api/customers` (add, edit, profile with spend and history)             |
 
 Every endpoint, its permission and its fields are listed in [docs/API.md](docs/API.md). Errors
 always have the shape `{ "error": { "code": "...", "message": "..." } }`.

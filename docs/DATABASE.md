@@ -114,6 +114,7 @@ erDiagram
     int igst
     int roundOff
     int grandTotal
+    int refundedTotal "returns so far"
     enum status
     ObjectId cashier FK
     date soldAt
@@ -132,6 +133,7 @@ erDiagram
     int total
     int unitCost "for profit"
     number returnedQuantity
+    object refunded "taxable and tax refunded"
   }
   PAYMENT {
     enum method "cash | card | upi"
@@ -142,6 +144,13 @@ erDiagram
     ObjectId _id PK
     string returnNumber UK
     ObjectId sale FK
+    ObjectId customer FK "optional"
+    boolean interState
+    int taxable
+    int cgst
+    int sgst
+    int igst
+    int roundOff
     int totalRefund
     enum refundMethod
     string reason
@@ -150,7 +159,10 @@ erDiagram
   }
   RETURN_ITEM {
     ObjectId product FK
+    string hsnCode "snapshot"
     number quantity
+    int unitCost "from the sale"
+    int taxable
     int total
     boolean restock
   }

@@ -5,6 +5,7 @@ import { customersRouter } from '../modules/customers/routes.js';
 import { inventoryRouter } from '../modules/inventory/routes.js';
 import { productsRouter } from '../modules/products/routes.js';
 import { purchaseOrdersRouter } from '../modules/purchase-orders/routes.js';
+import { returnsRouter } from '../modules/returns/routes.js';
 import { salesRouter } from '../modules/sales/routes.js';
 import { settingsRouter } from '../modules/settings/routes.js';
 import { suppliersRouter } from '../modules/suppliers/routes.js';
@@ -22,6 +23,7 @@ export function createApiRouter() {
   api.use('/inventory', inventoryRouter);
   api.use('/purchase-orders', purchaseOrdersRouter);
   api.use('/sales', salesRouter);
+  api.use('/returns', returnsRouter);
   api.use('/customers', customersRouter);
   api.use('/settings', settingsRouter);
   return api;

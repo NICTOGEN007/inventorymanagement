@@ -8,6 +8,7 @@ import type {
   Unit,
 } from './constants.js';
 import type { GstRate } from './gst.js';
+import type { TaxSplit } from './returns.js';
 import type { StockStatus } from './pricing.js';
 import type { StateCode } from './states.js';
 
@@ -249,6 +250,8 @@ export interface SaleItemDto {
   igst: number;
   total: number;
   returnedQuantity: number;
+  /** Refunded on returns so far (taxable value and tax). */
+  refunded: TaxSplit;
 }
 
 /** Buyer as printed on the invoice; absent for a walk-in customer. */
@@ -287,9 +290,89 @@ export interface SaleDto extends Omit<SaleSummaryDto, 'paymentMethods'> {
   roundOff: number;
   payments: PaymentDto[];
   notes?: string;
+  /** Total refunded on returns against this invoice, in paise. */
+  refundedTotal: number;
+  /** Credit notes issued against this invoice, oldest first. */
+  returns: { id: string; returnNumber: string; returnedAt: string; totalRefund: number }[];
 }
 
 export interface SaleList extends Paginated<SaleSummaryDto> {
   /** Count and value of every sale matching the filters, not just this page. */
+  summary: { count: number; total: number };
+}
+
+// ---------------------------------------------------------------------------
+// Customers
+
+export interface CustomerStatsDto {
+  /** Bills issued to the customer. */
+  visits: number;
+  /** What they spent, less refunds, in paise. */
+  totalSpent: number;
+  lastPurchaseAt?: string;
+}
+
+export interface CustomerListItemDto extends CustomerSummaryDto {
+  email?: string;
+  isActive: boolean;
+  createdAt: string;
+  stats: CustomerStatsDto;
+}
+
+export interface CustomerDto extends CustomerListItemDto {
+  address?: { line1?: string; line2?: string; city?: string; pincode?: string };
+  updatedAt: string;
+  stats: CustomerStatsDto & {
+    averageBill: number;
+    firstPurchaseAt?: string;
+    returns: number;
+    refunded: number;
+  };
+  /** What they buy most, by amount spent. */
+  topProducts: { product: Ref & { unit: Unit }; quantity: number; total: number }[];
+}
+
+// ---------------------------------------------------------------------------
+// Returns (credit notes)
+
+export interface SaleReturnItemDto extends TaxSplit {
+  product: { id: string; name: string; sku: string; unit: Unit };
+  hsnCode: string;
+  gstRate: GstRate;
+  quantity: number;
+  total: number;
+  /** Went back on the shelf (false for damaged goods). */
+  restock: boolean;
+}
+
+export interface SaleReturnSummaryDto {
+  id: string;
+  returnNumber: string;
+  returnedAt: string;
+  sale: { id: string; invoiceNumber: string };
+  customer?: SaleCustomerDto;
+  itemCount: number;
+  totalRefund: number;
+  refundMethod: PaymentMethod;
+  reason: string;
+  processedBy: Ref;
+}
+
+export interface SaleReturnDto extends SaleReturnSummaryDto {
+  /** When the original invoice was issued. */
+  soldAt: string;
+  placeOfSupply: StateCode;
+  interState: boolean;
+  items: SaleReturnItemDto[];
+  taxable: number;
+  cgst: number;
+  sgst: number;
+  igst: number;
+  totalTax: number;
+  roundOff: number;
+  refundReference?: string;
+}
+
+export interface SaleReturnList extends Paginated<SaleReturnSummaryDto> {
   summary: { count: number; total: number };
 }

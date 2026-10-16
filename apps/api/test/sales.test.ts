@@ -411,13 +411,14 @@ describe('customer lookup for the till', () => {
     const res = await till().get('/api/customers?search=98220');
     expect(res.status).toBe(200);
     expect(res.body.data).toEqual([
-      {
+      expect.objectContaining({
         id: id(walkInBusiness),
         name: 'Western Traders',
         phone: '9822012345',
         gstin: walkInBusiness.gstin,
         stateCode: '27',
-      },
+        isActive: true,
+      }),
     ]);
     expect((await till().get('/api/customers?search=27AAPFU')).body.total).toBe(1);
   });

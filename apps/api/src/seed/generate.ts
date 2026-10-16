@@ -1,11 +1,13 @@
 import {
   calculateGst,
+  calculateReturnTotals,
   calculateInvoiceTotals,
   calculateLine,
   financialYear,
   formatDocumentNumber,
   gstinCheckCharacter,
   istDateParts,
+  returnLineAmounts,
   rupeesToPaise,
   taxableFromInclusive,
   type AdjustmentReason,
@@ -15,6 +17,7 @@ import {
   type Role,
   type StateCode,
   type StockMovementType,
+  type TaxSplit,
   type Unit,
 } from '@ims/shared';
 import { Types } from 'mongoose';
@@ -120,6 +123,7 @@ export interface SeedSaleItem extends Amounts {
   total: number;
   unitCost: number;
   returnedQuantity: number;
+  refunded: TaxSplit;
 }
 
 export interface SeedSale extends Amounts {
@@ -135,6 +139,7 @@ export interface SeedSale extends Amounts {
   totalTax: number;
   roundOff: number;
   grandTotal: number;
+  refundedTotal: number;
   payments: { method: PaymentMethod; amount: number; reference?: string }[];
   status: 'completed' | 'partially_returned' | 'returned';
   cashier: Id;
@@ -175,13 +180,24 @@ export interface SeedSaleReturn extends Amounts {
   returnNumber: string;
   sale: Id;
   invoiceNumber: string;
+  customer?: Id;
+  customerName?: string;
+  placeOfSupply: StateCode;
+  interState: boolean;
   items: (Amounts & {
     product: Id;
     name: string;
+    sku: string;
+    hsnCode: string;
+    unit: Unit;
+    gstRate: GstRate;
     quantity: number;
+    unitCost: number;
     total: number;
     restock: boolean;
   })[];
+  totalTax: number;
+  roundOff: number;
   totalRefund: number;
   refundMethod: PaymentMethod;
   reason: string;
@@ -566,42 +582,51 @@ export function generateDataset({ days, seed, now }: GenerateOptions): Dataset {
       const item = pending.sale.items[pending.itemIndex]!;
       const product = products.find((p) => p.doc._id.equals(item.product))!;
       const { reason, restock } = rng.pick(RETURN_REASONS);
-      const share = pending.quantity / item.quantity;
-      const part = (value: number) => Math.round(value * share);
-      const line = {
-        taxable: part(item.taxable),
-        cgst: part(item.cgst),
-        sgst: part(item.sgst),
-        igst: part(item.igst),
-      };
-      const total = line.taxable + line.cgst + line.sgst + line.igst;
+      // The same arithmetic as the API: a share of what the line has not refunded yet.
+      const line = returnLineAmounts(item, pending.quantity);
+      item.returnedQuantity = round3(item.returnedQuantity + pending.quantity);
+      const completesSale = pending.sale.items.every((it) => it.returnedQuantity >= it.quantity);
+      const totals = calculateReturnTotals([line], pending.sale, completesSale);
       const saleReturn: SeedSaleReturn = {
         _id: newId(returnedAt),
         returnNumber: nextNumber('return', 'RET', returnedAt),
         sale: pending.sale._id,
         invoiceNumber: pending.sale.invoiceNumber,
+        ...(pending.sale.customer && { customer: pending.sale.customer }),
+        ...(pending.sale.customerSnapshot && {
+          customerName: pending.sale.customerSnapshot.name,
+        }),
+        placeOfSupply: pending.sale.placeOfSupply,
+        interState: pending.sale.interState,
         items: [
           {
             product: item.product,
             name: item.name,
+            sku: item.sku,
+            hsnCode: item.hsnCode,
+            unit: item.unit,
+            gstRate: item.gstRate,
             quantity: pending.quantity,
+            unitCost: item.unitCost,
             ...line,
-            total,
             restock,
           },
         ],
-        ...line,
-        totalRefund: total,
+        ...totals,
         refundMethod: pending.sale.payments[0]!.method,
         reason,
         processedBy: managerId,
         returnedAt,
       };
+      item.refunded = {
+        taxable: item.refunded.taxable + line.taxable,
+        cgst: item.refunded.cgst + line.cgst,
+        sgst: item.refunded.sgst + line.sgst,
+        igst: item.refunded.igst + line.igst,
+      };
+      pending.sale.refundedTotal += totals.totalRefund;
       saleReturns.push(saleReturn);
-      item.returnedQuantity = round3(item.returnedQuantity + pending.quantity);
-      pending.sale.status = pending.sale.items.every((it) => it.returnedQuantity >= it.quantity)
-        ? 'returned'
-        : 'partially_returned';
+      pending.sale.status = completesSale ? 'returned' : 'partially_returned';
       if (restock) {
         move(product, 'sale_return', pending.quantity, returnedAt, managerId, {
           model: 'SaleReturn',
@@ -710,6 +735,7 @@ export function generateDataset({ days, seed, now }: GenerateOptions): Dataset {
           total: line.total,
           unitCost: product.doc.costPrice,
           returnedQuantity: 0,
+          refunded: { taxable: 0, cgst: 0, sgst: 0, igst: 0 },
         });
       });
 
@@ -742,6 +768,7 @@ export function generateDataset({ days, seed, now }: GenerateOptions): Dataset {
         totalTax: totals.totalTax,
         roundOff: totals.roundOff,
         grandTotal: totals.grandTotal,
+        refundedTotal: 0,
         payments: [
           {
             method,

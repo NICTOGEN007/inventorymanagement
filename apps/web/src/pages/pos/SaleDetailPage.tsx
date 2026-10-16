@@ -3,34 +3,35 @@ import {
   formatINR,
   getStateName,
   PAYMENT_METHOD_LABELS,
-  SALE_STATUS_LABELS,
+  returnableQuantity,
   type SaleDto,
 } from '@ims/shared';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Download, Printer } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowLeft, Download, Printer, Undo2 } from 'lucide-react';
 import { Link, useParams } from 'react-router';
+import { useAuth } from '@/auth/AuthProvider';
+import { SaleStatusBadge } from '@/components/SaleStatusBadge';
 import { ErrorAlert } from '@/components/ui/Alert';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
+import { Button, buttonClass } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Spinner } from '@/components/ui/Spinner';
 import { apiFetch } from '@/lib/api';
-import { formatDateTime, formatQuantity } from '@/lib/format';
-import { downloadInvoice, printInvoice } from '@/lib/invoice';
+import { formatDate, formatDateTime, formatQuantity } from '@/lib/format';
+import { invoicePdf } from '@/lib/invoice';
+import { usePdfActions } from '@/lib/usePdfActions';
 
 const stateLabel = (code: string) => `${getStateName(code) ?? code} (${code})`;
 
 export function SaleDetailPage() {
   const { id = '' } = useParams();
+  const { can } = useAuth();
   const query = useQuery({
     queryKey: ['sales', 'detail', id],
     queryFn: () => apiFetch<{ sale: SaleDto }>(`/sales/${id}`),
     select: (r) => r.sale,
   });
-  const [busy, setBusy] = useState<'print' | 'download' | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const pdf = usePdfActions(query.data && invoicePdf(query.data));
 
   if (query.isPending) {
     return (
@@ -44,17 +45,10 @@ export function SaleDetailPage() {
   }
   const sale = query.data;
 
-  const run = async (kind: 'print' | 'download') => {
-    setBusy(kind);
-    setError(null);
-    try {
-      await (kind === 'print' ? printInvoice(sale) : downloadInvoice(sale));
-    } catch (err) {
-      setError(`Could not get the invoice. ${(err as Error).message}`);
-    } finally {
-      setBusy(null);
-    }
-  };
+  const canReturn =
+    can('returns:create') &&
+    sale.status !== 'cancelled' &&
+    sale.items.some((i) => returnableQuantity(i) > 0);
 
   return (
     <div className="space-y-6">
@@ -69,32 +63,54 @@ export function SaleDetailPage() {
         description={
           <>
             {formatDateTime(sale.soldAt)} · billed by {sale.cashier.name}{' '}
-            {sale.status !== 'completed' && (
-              <Badge tone="amber">{SALE_STATUS_LABELS[sale.status]}</Badge>
-            )}
+            <SaleStatusBadge status={sale.status} />
           </>
         }
         actions={
           <>
-            <Button variant="secondary" loading={busy === 'print'} onClick={() => run('print')}>
+            {canReturn && (
+              <Link
+                to={`/pos/sales/${sale.id}/return`}
+                className={buttonClass({ variant: 'secondary' })}
+              >
+                <Undo2 className="size-4" aria-hidden />
+                Return items
+              </Link>
+            )}
+            <Button
+              variant="secondary"
+              loading={pdf.busy === 'print'}
+              onClick={() => pdf.run('print')}
+            >
               <Printer className="size-4" aria-hidden />
               Print invoice
             </Button>
-            <Button loading={busy === 'download'} onClick={() => run('download')}>
+            <Button loading={pdf.busy === 'download'} onClick={() => pdf.run('download')}>
               <Download className="size-4" aria-hidden />
               Download PDF
             </Button>
           </>
         }
       />
-      {error && <ErrorAlert>{error}</ErrorAlert>}
+      {pdf.error && <ErrorAlert>{pdf.error}</ErrorAlert>}
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="p-5">
           <h2 className="text-sm font-semibold">Customer</h2>
           {sale.customer ? (
             <dl className="mt-2 space-y-1 text-sm">
-              <dd className="font-medium">{sale.customer.name}</dd>
+              <dd className="font-medium">
+                {sale.customer.id && can('customers:read') ? (
+                  <Link
+                    to={`/customers/${sale.customer.id}`}
+                    className="hover:text-indigo-600 dark:hover:text-indigo-400"
+                  >
+                    {sale.customer.name}
+                  </Link>
+                ) : (
+                  sale.customer.name
+                )}
+              </dd>
               {sale.customer.phone && <dd className="text-slate-500">{sale.customer.phone}</dd>}
               {sale.customer.gstin && <dd>GSTIN {sale.customer.gstin}</dd>}
             </dl>
@@ -170,6 +186,11 @@ export function SaleDetailPage() {
                   </td>
                   <td className="px-4 py-3 text-right whitespace-nowrap tabular-nums">
                     {formatQuantity(i.quantity, i.product.unit)}
+                    {i.returnedQuantity > 0 && (
+                      <div className="text-xs text-amber-700 dark:text-amber-400">
+                        {formatQuantity(i.returnedQuantity, i.product.unit)} returned
+                      </div>
+                    )}
                   </td>
                   <td className="hidden px-4 py-3 text-right whitespace-nowrap tabular-nums sm:table-cell">
                     {formatINR(i.unitPrice)}
@@ -219,6 +240,41 @@ export function SaleDetailPage() {
           </dl>
         </div>
       </Card>
+      {sale.returns.length > 0 && (
+        <section className="space-y-3" aria-labelledby="returns-heading">
+          <h2 id="returns-heading" className="text-lg font-semibold">
+            Returns
+          </h2>
+          <Card>
+            <ul className="divide-y divide-slate-100 text-sm dark:divide-slate-800">
+              {sale.returns.map((r) => (
+                <li key={r.id} className="flex items-baseline justify-between gap-4 px-4 py-3">
+                  <span>
+                    <Link
+                      to={`/pos/returns/${r.id}`}
+                      className="font-medium hover:text-indigo-600 dark:hover:text-indigo-400"
+                    >
+                      {r.returnNumber}
+                    </Link>
+                    <span className="block text-xs text-slate-500 dark:text-slate-400">
+                      Credit note · {formatDate(r.returnedAt)}
+                    </span>
+                  </span>
+                  <span className="tabular-nums">−{formatINR(r.totalRefund)}</span>
+                </li>
+              ))}
+            </ul>
+            <dl className="flex justify-between gap-4 border-t border-slate-200 px-4 py-3 text-sm dark:border-slate-800">
+              <dt className="text-slate-500 dark:text-slate-400">
+                Net after {formatINR(sale.refundedTotal)} refunded
+              </dt>
+              <dd className="font-semibold tabular-nums">
+                {formatINR(sale.grandTotal - sale.refundedTotal)}
+              </dd>
+            </dl>
+          </Card>
+        </section>
+      )}
       {sale.notes && <p className="text-sm text-slate-500">Note: {sale.notes}</p>}
     </div>
   );

@@ -89,6 +89,7 @@ const sale = (overrides: Partial<SaleDto> = {}): SaleDto => ({
       igst: 0,
       total: 123400,
       returnedQuantity: 0,
+      refunded: { taxable: 0, cgst: 0, sgst: 0, igst: 0 },
     },
     {
       product: { id: SOAP, name: 'Bath Soap', sku: 'BAT-001', unit: 'pcs' },
@@ -105,6 +106,7 @@ const sale = (overrides: Partial<SaleDto> = {}): SaleDto => ({
       igst: 0,
       total: 17950,
       returnedQuantity: 0,
+      refunded: { taxable: 0, cgst: 0, sgst: 0, igst: 0 },
     },
   ],
   gross: 141400,
@@ -115,6 +117,8 @@ const sale = (overrides: Partial<SaleDto> = {}): SaleDto => ({
   igst: 0,
   roundOff: 50,
   payments: [{ method: 'cash', amount: 141400 }],
+  refundedTotal: 0,
+  returns: [],
   ...overrides,
 });
 

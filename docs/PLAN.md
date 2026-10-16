@@ -151,7 +151,7 @@ stateDiagram-v2
 - [x] **5. Inventory ledger + stock adjustments**: stock history, counts, write-offs, valuation
 - [x] **6. Purchase orders**: drafts, GST, partial deliveries, weighted-average cost
 - [x] **7. POS + GST invoice PDF**: barcode billing, split payments, IGST for other states, invoice PDF
-- [ ] **8. Returns + customers**
+- [x] **8. Returns + customers**: credit notes, exact refunds, restocking, customer profiles and history
 - [ ] **9. Dashboard, reports, exports**
 - [ ] **9.5 AI: Forecasting engine, restock plans with confirmation, proactive alerts**
 - [ ] **9.6 AI: Gemini assistant that answers questions and prepares restock plans**
