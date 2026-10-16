@@ -14,13 +14,18 @@ export default tseslint.config(
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
       '@typescript-eslint/consistent-type-imports': 'error',
-      eqeqeq: ['error', 'always'],
+      eqeqeq: ['error', 'always', { null: 'ignore' }],
       'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
   },
   {
     files: ['apps/api/**/*.ts', 'packages/shared/**/*.ts', '*.js'],
     languageOptions: { globals: globals.node },
+  },
+  {
+    // Command-line scripts talk to the user through the console.
+    files: ['apps/api/src/seed/cli.ts'],
+    rules: { 'no-console': 'off' },
   },
   {
     files: ['apps/web/**/*.{ts,tsx}'],

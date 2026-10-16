@@ -51,8 +51,24 @@ export function taxableFromInclusive(inclusive: Paise, rate: GstRate): Paise {
 }
 
 const GSTIN_PATTERN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
+const GSTIN_CHARSET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-/** Checks the 15-character GSTIN format; the first two digits are the state code. */
+/** Computes the 15th (check) character of a GSTIN from its first 14 characters. */
+export function gstinCheckCharacter(first14: string): string {
+  let sum = 0;
+  for (let i = 0; i < 14; i++) {
+    const value = GSTIN_CHARSET.indexOf(first14[i] ?? '');
+    if (value < 0) throw new RangeError(`Invalid GSTIN character at position ${i + 1}`);
+    const product = value * (i % 2 === 0 ? 1 : 2);
+    sum += Math.floor(product / 36) + (product % 36);
+  }
+  return GSTIN_CHARSET[(36 - (sum % 36)) % 36]!;
+}
+
+/**
+ * Validates a 15-character GSTIN: format (state code, PAN, entity number, "Z")
+ * and the final check character.
+ */
 export function isValidGstin(gstin: string): boolean {
-  return GSTIN_PATTERN.test(gstin);
+  return GSTIN_PATTERN.test(gstin) && gstinCheckCharacter(gstin.slice(0, 14)) === gstin[14];
 }

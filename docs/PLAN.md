@@ -68,10 +68,10 @@ flowchart LR
 
 ## 6. Data model (collections)
 
-`users`, `settings`, `categories`, `suppliers`, `products`, `customers`, `purchaseorders`,
-`sales`, `returns`, `stockmovements`, `auditlogs`
+`users`, `settings`, `counters`, `categories`, `suppliers`, `products`, `customers`,
+`purchaseorders`, `sales`, `salereturns`, `stockmovements`, `auditlogs`
 
-An ER diagram is added in step 2 (`docs/DATABASE.md`).
+The ER diagram and design decisions are in [DATABASE.md](DATABASE.md).
 
 ## 7. AI features
 
@@ -104,7 +104,7 @@ An ER diagram is added in step 2 (`docs/DATABASE.md`).
 ## 9. Build order
 
 - [x] **1. Scaffolding**: monorepo, tooling, Docker Compose, CI, README, health check
-- [ ] **2. Data models + seed data** (with ER diagram)
+- [x] **2. Data models + seed data** (with ER diagram): see [DATABASE.md](DATABASE.md)
 - [ ] **3. Auth + roles**
 - [ ] **4. Products, categories, suppliers** (API + UI)
 - [ ] **5. Inventory ledger + stock adjustments**

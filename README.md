@@ -5,7 +5,8 @@ GST-compliant invoicing, AI demand forecasting and an AI assistant.
 
 Built with the **MERN** stack in TypeScript: MongoDB, Express, React and Node.js.
 
-> **Status:** Step 1 of 10 (project scaffolding) is complete. See the roadmap in
+> **Status:** Steps 1–2 of 10 are complete: project scaffolding, and the database models with
+> realistic demo data. See the roadmap in
 > [docs/PLAN.md](docs/PLAN.md).
 
 ## Features (planned)
@@ -42,8 +43,10 @@ Built with the **MERN** stack in TypeScript: MongoDB, Express, React and Node.js
 │   │   │   ├── config/      # environment variable validation
 │   │   │   ├── db/          # MongoDB connection
 │   │   │   ├── middleware/  # error handling, auth (later)
+│   │   │   ├── models/      # Mongoose schemas (see docs/DATABASE.md)
 │   │   │   ├── routes/      # route definitions
-│   │   │   └── utils/       # logger, errors
+│   │   │   ├── seed/        # demo data generator
+│   │   │   └── utils/       # logger, errors, passwords
 │   │   └── test/
 │   └── web/            # React frontend
 │       ├── src/
@@ -66,9 +69,12 @@ Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
 ```bash
 docker compose up --build
+# In a second terminal, load the demo data (one time):
+docker compose exec api node apps/api/dist/seed.js --reset --force
 ```
 
 Open **http://localhost:8080**. The API is also available at http://localhost:4000/api/health.
+(`--force` is needed because the Docker image runs with `NODE_ENV=production`.)
 
 ### Option B: local development (hot reload)
 
@@ -78,6 +84,7 @@ Requires **Node.js 22+** and Docker (for MongoDB only).
 npm install                       # install all workspaces
 cp apps/api/.env.example apps/api/.env
 docker compose up -d mongo        # start MongoDB as a replica set
+npm run seed                      # load a year of demo data
 npm run dev                       # API on :4000, web on :5173
 ```
 
@@ -85,6 +92,22 @@ Open **http://localhost:5173**. The Vite dev server forwards `/api` requests to 
 
 > Using MongoDB Atlas instead of Docker? Put your Atlas connection string in `MONGODB_URI` in
 > `apps/api/.env`. Atlas clusters are replica sets, so transactions work.
+
+### Demo data and logins
+
+`npm run seed` simulates a year of trading for a supermarket in Bengaluru: about 12,000 GST
+invoices, 800 purchase orders, returns, and a full stock ledger, with weekly, seasonal and festival
+demand patterns. Details are in [docs/DATABASE.md](docs/DATABASE.md#demo-data).
+
+| Role    | Email                     | Password      |
+| ------- | ------------------------- | ------------- |
+| Admin   | `admin@stocksmart.test`   | `Admin@123`   |
+| Manager | `manager@stocksmart.test` | `Manager@123` |
+| Cashier | `cashier@stocksmart.test` | `Cashier@123` |
+
+Options: `npm run seed -- --reset` wipes existing data first (required if the database is not
+empty), `--days 180` changes the history length, and `--seed 42` gives a different but
+reproducible dataset.
 
 ## Scripts
 
@@ -99,6 +122,15 @@ Run from the repository root:
 | `npm run typecheck` | Type-check all packages                        |
 | `npm run format`    | Format all files with Prettier                 |
 | `npm run check`     | Format check + lint + typecheck + test (as CI) |
+| `npm run seed`      | Load demo data (see above)                     |
+
+### Tests
+
+API tests run against a real, in-memory MongoDB replica set
+([mongodb-memory-server](https://github.com/typegoose/mongodb-memory-server)), so unique indexes and
+transactions are tested for real. The first run downloads a MongoDB binary (about 100 MB, cached
+afterwards). Without internet access, point it at an installed `mongod` instead:
+`MONGOMS_SYSTEM_BINARY=/path/to/mongod npm test`.
 
 ## Environment variables (API)
 
@@ -121,3 +153,4 @@ Errors always have the shape `{ "error": { "code": "...", "message": "..." } }`.
 ## Documentation
 
 - [Project plan & roadmap](docs/PLAN.md)
+- [Database design & ER diagram](docs/DATABASE.md)

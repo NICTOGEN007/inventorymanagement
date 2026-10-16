@@ -20,6 +20,11 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # API tests start an in-memory MongoDB; cache its binary between runs.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}-${{ hashFiles('apps/api/package.json') }}
       - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck

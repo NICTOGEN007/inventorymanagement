@@ -44,3 +44,7 @@ export type StateCode = (typeof INDIAN_STATES)[number]['code'];
 export function getStateName(code: string): string | undefined {
   return INDIAN_STATES.find((s) => s.code === code)?.name;
 }
+
+export function isStateCode(code: string): code is StateCode {
+  return INDIAN_STATES.some((s) => s.code === code);
+}

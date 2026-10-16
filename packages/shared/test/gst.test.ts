@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { calculateGst, isGstRate, isValidGstin, taxableFromInclusive } from '../src/gst.js';
-import { getStateName } from '../src/states.js';
+import {
+  calculateGst,
+  gstinCheckCharacter,
+  isGstRate,
+  isValidGstin,
+  taxableFromInclusive,
+} from '../src/gst.js';
+import { getStateName, isStateCode } from '../src/states.js';
 
 describe('calculateGst', () => {
   it('splits intra-state tax equally into CGST and SGST', () => {
@@ -44,14 +50,23 @@ describe('GST helpers', () => {
     expect(isGstRate(12)).toBe(false);
   });
 
-  it('validates GSTIN format', () => {
+  it('validates GSTIN format and check character', () => {
     expect(isValidGstin('27AAPFU0939F1ZV')).toBe(true);
+    expect(isValidGstin('29AAGCB7383J1Z4')).toBe(true);
+    expect(isValidGstin('27AAPFU0939F1ZW')).toBe(false); // wrong check character
     expect(isValidGstin('27aapfu0939f1zv')).toBe(false);
     expect(isValidGstin('27AAPFU0939F1Z')).toBe(false);
+  });
+
+  it('computes the GSTIN check character', () => {
+    expect(gstinCheckCharacter('27AAPFU0939F1Z')).toBe('V');
+    expect(() => gstinCheckCharacter('27AAPFU0939F1-')).toThrow(RangeError);
   });
 
   it('maps state codes to names', () => {
     expect(getStateName('29')).toBe('Karnataka');
     expect(getStateName('99')).toBeUndefined();
+    expect(isStateCode('27')).toBe(true);
+    expect(isStateCode('28')).toBe(false);
   });
 });
