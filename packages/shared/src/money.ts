@@ -24,3 +24,25 @@ const inrFormatter = new Intl.NumberFormat('en-IN', {
 export function formatINR(paise: Paise): string {
   return inrFormatter.format(paiseToRupees(paise));
 }
+
+const inrWholeFormatter = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 0,
+});
+
+const oneDecimal = (value: number) => (Math.round(value * 10) / 10).toLocaleString('en-IN');
+
+/**
+ * Short form for headline figures in the Indian system: ₹69,100, ₹23.5L (lakh), ₹9.9Cr (crore).
+ * Built by hand because browsers disagree on compact notation (Chromium writes ₹69.1T for
+ * thousands in en-IN, Node writes ₹69.1K).
+ */
+export function formatINRCompact(paise: Paise): string {
+  const rupees = paiseToRupees(paise);
+  const sign = rupees < 0 ? '-' : '';
+  const abs = Math.abs(rupees);
+  if (abs >= 1e7) return `${sign}₹${oneDecimal(abs / 1e7)}Cr`;
+  if (abs >= 1e5) return `${sign}₹${oneDecimal(abs / 1e5)}L`;
+  return inrWholeFormatter.format(rupees);
+}

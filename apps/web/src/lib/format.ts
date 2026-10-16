@@ -47,3 +47,9 @@ export function paiseToInput(paise: number | undefined): string {
 export function formatQuantity(quantity: number, unit: string): string {
   return `${Number(quantity.toFixed(3)).toLocaleString('en-IN')} ${unit}`;
 }
+
+/** Signed change with a real minus sign: "+5 pcs", "−2.5 kg". */
+export function formatChange(quantity: number, unit: string): string {
+  const sign = quantity > 0 ? '+' : quantity < 0 ? '−' : '';
+  return `${sign}${formatQuantity(Math.abs(quantity), unit)}`;
+}

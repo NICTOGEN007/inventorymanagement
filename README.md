@@ -5,8 +5,8 @@ GST-compliant invoicing, AI demand forecasting and an AI assistant.
 
 Built with the **MERN** stack in TypeScript: MongoDB, Express, React and Node.js.
 
-> **Status:** Steps 1–4 of 10 are complete: scaffolding, database and demo data, sign-in with
-> roles, and the product catalogue (products, categories, suppliers). See the roadmap in
+> **Status:** Steps 1–5 of 10 are complete: scaffolding, database and demo data, sign-in with
+> roles, the product catalogue, and inventory (stock history, counts, write-offs, valuation). See the roadmap in
 > [docs/PLAN.md](docs/PLAN.md).
 
 ## Features (planned)

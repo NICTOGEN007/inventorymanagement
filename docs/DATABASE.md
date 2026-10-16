@@ -180,7 +180,8 @@ erDiagram
     int unitCost
     string refModel "Sale | PurchaseOrder | SaleReturn"
     ObjectId refId FK
-    string note "required for adjustments"
+    enum reason "count | damaged | expired | lost | other"
+    string note "required when reason is other"
     date occurredAt
   }
   AUDIT_LOG {
@@ -241,7 +242,14 @@ after it, **in the same MongoDB transaction** as the stock update. So:
 - current stock can always be explained ("why do we have 14?");
 - the stock of any product on any past date can be reconstructed;
 - stock valuation and shrinkage reports come straight from the ledger;
-- adjustments require a written reason, which discourages silent edits.
+- adjustments require a reason (stock count, damaged, expired, lost, other), which discourages
+  silent edits and lets reports separate shrinkage from counting errors.
+
+All stock changes go through one function (`recordMovement` in
+`apps/api/src/modules/inventory/ledger.ts`). It applies the change with a single atomic update
+that only succeeds if enough stock remains, so two cashiers selling the last unit at the same
+moment cannot both succeed. A second guard in the schema (`balanceAfter` cannot be negative)
+backs it up.
 
 Transactions need a replica set, so Docker Compose runs MongoDB as a single-node replica set.
 

@@ -54,3 +54,14 @@ export function formatDocumentNumber(prefix: string, date: Date, sequence: numbe
   }
   return value;
 }
+
+const IST_OFFSET_MS = 330 * 60_000;
+
+/** The UTC instants where an IST calendar day ("YYYY-MM-DD") starts and the next one starts. */
+export function istDayRange(dateKey: string): { start: Date; end: Date } {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateKey);
+  if (!match) throw new RangeError(`Expected a date like 2026-10-16: ${dateKey}`);
+  const startMs =
+    Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])) - IST_OFFSET_MS;
+  return { start: new Date(startMs), end: new Date(startMs + 86_400_000) };
+}

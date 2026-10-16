@@ -1,9 +1,16 @@
-import { formatINR, priceBreakdown, type ProductDto } from '@ims/shared';
+import {
+  formatINR,
+  priceBreakdown,
+  type Paginated,
+  type ProductDto,
+  type StockMovementDto,
+} from '@ims/shared';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Pencil } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
 import { useAuth } from '@/auth/AuthProvider';
+import { MovementBadge } from '@/components/MovementBadge';
 import { StockBadge } from '@/components/StockBadge';
 import { ErrorAlert } from '@/components/ui/Alert';
 import { Badge } from '@/components/ui/Badge';
@@ -11,7 +18,7 @@ import { buttonClass } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { apiFetch } from '@/lib/api';
-import { formatDateTime, formatQuantity } from '@/lib/format';
+import { formatChange, formatDateTime, formatQuantity } from '@/lib/format';
 
 export function ProductDetailPage() {
   const { id } = useParams();
@@ -32,7 +39,8 @@ export function ProductDetailPage() {
     return <ErrorAlert>Could not load the product. {(query.error as Error).message}</ErrorAlert>;
 
   const p = query.data.product;
-  const price = priceBreakdown(p);
+  const price = priceBreakdown({ ...p, costPrice: p.costPrice ?? 0 });
+  const showCost = p.costPrice !== undefined;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -55,12 +63,22 @@ export function ProductDetailPage() {
               {!p.isActive && <Badge>Inactive</Badge>}
             </div>
           </div>
-          {can('products:write') && (
-            <Link to={`/products/${p.id}/edit`} className={buttonClass({ variant: 'secondary' })}>
-              <Pencil className="size-4" aria-hidden />
-              Edit
-            </Link>
-          )}
+          <div className="flex gap-2">
+            {can('inventory:adjust') && (
+              <Link
+                to={`/inventory/adjust?product=${p.id}`}
+                className={buttonClass({ variant: 'secondary' })}
+              >
+                Adjust stock
+              </Link>
+            )}
+            {can('products:write') && (
+              <Link to={`/products/${p.id}/edit`} className={buttonClass({ variant: 'secondary' })}>
+                <Pencil className="size-4" aria-hidden />
+                Edit
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 
@@ -78,20 +96,24 @@ export function ProductDetailPage() {
             <dl className="space-y-2 text-sm">
               <Row label="Before GST" value={formatINR(price.taxable)} />
               <Row label={`GST (${p.gstRate}%)`} value={formatINR(price.gst)} />
-              <Row label="Cost (excl. GST)" value={formatINR(p.costPrice)} />
-              <Row
-                label="Margin"
-                value={
-                  <span
-                    className={
-                      price.margin < 0 ? 'text-rose-600' : 'text-emerald-600 dark:text-emerald-400'
-                    }
-                  >
-                    {formatINR(price.margin)}
-                    {price.marginPercent !== null && ` (${price.marginPercent}%)`}
-                  </span>
-                }
-              />
+              {showCost && <Row label="Cost (excl. GST)" value={formatINR(p.costPrice!)} />}
+              {showCost && (
+                <Row
+                  label="Margin"
+                  value={
+                    <span
+                      className={
+                        price.margin < 0
+                          ? 'text-rose-600'
+                          : 'text-emerald-600 dark:text-emerald-400'
+                      }
+                    >
+                      {formatINR(price.margin)}
+                      {price.marginPercent !== null && ` (${price.marginPercent}%)`}
+                    </span>
+                  }
+                />
+              )}
             </dl>
           </div>
         </Card>
@@ -128,6 +150,8 @@ export function ProductDetailPage() {
             </p>
           )}
         </Card>
+
+        {can('inventory:read') && <StockHistory product={p} />}
       </div>
     </div>
   );
@@ -139,5 +163,59 @@ function Row({ label, value }: { label: string; value: ReactNode }) {
       <dt className="text-slate-500 dark:text-slate-400">{label}</dt>
       <dd className="text-right font-medium tabular-nums">{value}</dd>
     </div>
+  );
+}
+
+function StockHistory({ product }: { product: ProductDto }) {
+  const history = useQuery({
+    queryKey: ['movements', `product=${product.id}&pageSize=8`],
+    queryFn: () =>
+      apiFetch<Paginated<StockMovementDto>>(
+        `/inventory/movements?product=${product.id}&pageSize=8`,
+      ),
+  });
+  return (
+    <Card className="overflow-hidden lg:col-span-3">
+      <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-6 py-4 dark:border-slate-800">
+        <h2 className="text-base font-semibold">Recent stock changes</h2>
+        <Link
+          to={`/inventory/movements?product=${product.id}`}
+          className="text-sm text-indigo-600 hover:underline dark:text-indigo-400"
+        >
+          Full history
+        </Link>
+      </div>
+      {history.isPending ? (
+        <div className="flex justify-center p-6">
+          <Spinner label="Loading stock history" />
+        </div>
+      ) : history.data?.data.length === 0 ? (
+        <p className="p-6 text-sm text-slate-500">No stock changes yet.</p>
+      ) : (
+        <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+          {history.data?.data.map((m) => (
+            <li
+              key={m.id}
+              className="flex flex-wrap items-center justify-between gap-3 px-6 py-3 text-sm"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <MovementBadge movement={m} />
+                <span className="truncate text-slate-500 dark:text-slate-400">
+                  {formatDateTime(m.occurredAt)}
+                  {m.reference && ` · ${m.reference.number}`}
+                </span>
+              </div>
+              <span className="tabular-nums">
+                <span className="font-medium">{formatChange(m.quantity, product.unit)}</span>
+                <span className="text-slate-500 dark:text-slate-400">
+                  {' '}
+                  → {formatQuantity(m.balanceAfter, product.unit)}
+                </span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   );
 }

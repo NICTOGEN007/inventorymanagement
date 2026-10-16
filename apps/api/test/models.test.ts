@@ -241,7 +241,7 @@ describe('StockMovement', () => {
         balanceAfter: 5,
       }),
     );
-    expect(errors.note).toMatch(/reason is required/);
+    expect(errors.reason).toMatch(/reason is required/);
     expect(errors.quantity).toMatch(/cannot be zero/);
   });
 });

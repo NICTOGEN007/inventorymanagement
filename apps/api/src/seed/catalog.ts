@@ -366,8 +366,8 @@ export const RETURN_REASONS = [
   { reason: 'Customer changed mind', restock: true },
 ] as const;
 
-export const ADJUSTMENT_NOTES = [
-  'Damaged in storage',
-  'Expired, written off',
-  'Stock count correction',
+export const ADJUSTMENTS = [
+  { reason: 'damaged', note: 'Damaged in storage' },
+  { reason: 'expired', note: 'Expired, written off' },
+  { reason: 'count', note: 'Stock count correction' },
 ] as const;

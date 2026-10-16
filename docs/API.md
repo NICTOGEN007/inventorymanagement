@@ -90,3 +90,41 @@ on open purchase orders) and `category`/`preferredSupplier` as `{ id, name }`.
 
 **Stock is never edited directly.** Sending `stock` to `PATCH` is rejected; stock changes only
 through the stock ledger (opening stock, purchases, sales, returns, adjustments).
+
+## Inventory
+
+| Method | Path                     | Permission         | Description                                                                        |
+| ------ | ------------------------ | ------------------ | ---------------------------------------------------------------------------------- |
+| GET    | `/inventory/movements`   | `inventory:read`   | The stock ledger, newest first (filters below)                                     |
+| GET    | `/inventory/summary`     | `reports:read`     | Stock value at cost and selling price, by category; write-offs in the last 30 days |
+| POST   | `/inventory/adjustments` | `inventory:adjust` | Stock count or write-off for one or more products                                  |
+
+Movement filters: `product`, `type` (`opening`, `purchase`, `sale`, `sale_return`,
+`purchase_return`, `adjustment`), `from` and `to` (IST calendar dates, `YYYY-MM-DD`, inclusive),
+`page`, `pageSize` (default 25). Each movement has a signed `quantity`, `balanceAfter`, the
+document that caused it as `reference: { kind, number }` (e.g. `INV/26-27/00042`), and who made
+it. `unitCost` and `value` are only included for roles with `reports:read`.
+
+Adjustment body:
+
+```json
+{
+  "reason": "count",
+  "note": "Monthly shelf count",
+  "items": [
+    { "product": "<id>", "mode": "set", "quantity": 20 },
+    { "product": "<id>", "mode": "change", "quantity": -1.5 }
+  ]
+}
+```
+
+- `reason`: `count` (stock count correction), `damaged`, `expired`, `lost`, or `other` (needs a
+  `note`). Damaged, expired and lost can only remove stock.
+- `mode`: `set` records the counted quantity (the API works out the difference); `change` adds
+  (+) or removes (−) the given amount.
+- Quantities may have decimals only for loose units (kg, g, litre, ml, metre).
+- All lines succeed or none do. Lines whose count already matches are reported as `unchanged`
+  and nothing is recorded for them. Removing more than is in stock is refused.
+
+**Cost prices** (`costPrice` on products, `unitCost`/`value` on movements, and the summary) are
+only returned to roles with `reports:read`, so cashiers never see margins.

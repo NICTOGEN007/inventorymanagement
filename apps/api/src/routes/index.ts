@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { createAuthRouter } from '../modules/auth/routes.js';
 import { categoriesRouter } from '../modules/categories/routes.js';
+import { inventoryRouter } from '../modules/inventory/routes.js';
 import { productsRouter } from '../modules/products/routes.js';
 import { suppliersRouter } from '../modules/suppliers/routes.js';
 import { usersRouter } from '../modules/users/routes.js';
@@ -14,5 +15,6 @@ export function createApiRouter() {
   api.use('/categories', categoriesRouter);
   api.use('/suppliers', suppliersRouter);
   api.use('/products', productsRouter);
+  api.use('/inventory', inventoryRouter);
   return api;
 }

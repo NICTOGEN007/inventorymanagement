@@ -8,6 +8,7 @@ import {
   istDateParts,
   rupeesToPaise,
   taxableFromInclusive,
+  type AdjustmentReason,
   type GstRate,
   type LineAmounts,
   type PaymentMethod,
@@ -18,7 +19,7 @@ import {
 } from '@ims/shared';
 import { Types } from 'mongoose';
 import {
-  ADJUSTMENT_NOTES,
+  ADJUSTMENTS,
   BUSINESS_CUSTOMERS,
   CATEGORIES,
   DEMO_USERS,
@@ -192,6 +193,7 @@ export interface SeedStockMovement {
   refModel?: 'Sale' | 'PurchaseOrder' | 'SaleReturn';
   refId?: Id;
   note?: string;
+  reason?: AdjustmentReason;
   createdBy: Id;
   occurredAt: Date;
 }
@@ -489,6 +491,7 @@ export function generateDataset({ days, seed, now }: GenerateOptions): Dataset {
     createdBy: Id,
     ref?: { model: 'Sale' | 'PurchaseOrder' | 'SaleReturn'; id: Id },
     note?: string,
+    reason?: AdjustmentReason,
   ) => {
     product.doc.stock = round3(product.doc.stock + quantity);
     if (product.doc.stock < 0) throw new Error(`Stock went negative for ${product.def.sku}`);
@@ -501,6 +504,7 @@ export function generateDataset({ days, seed, now }: GenerateOptions): Dataset {
       unitCost: product.doc.costPrice,
       ...(ref && { refModel: ref.model, refId: ref.id }),
       ...(note && { note }),
+      ...(reason && { reason }),
       createdBy,
       occurredAt,
     });
@@ -761,9 +765,9 @@ export function generateDataset({ days, seed, now }: GenerateOptions): Dataset {
       const candidates = products.filter((p) => p.doc.stock >= 3 && p.doc.unit !== 'kg');
       if (candidates.length > 0) {
         const product = rng.pick(candidates);
-        const note = rng.pick(ADJUSTMENT_NOTES);
-        const quantity = note === 'Stock count correction' && rng.chance(0.3) ? 1 : -rng.int(1, 2);
-        move(product, 'adjustment', quantity, closingTime, managerId, undefined, note);
+        const { reason, note } = rng.pick(ADJUSTMENTS);
+        const quantity = reason === 'count' && rng.chance(0.3) ? 1 : -rng.int(1, 2);
+        move(product, 'adjustment', quantity, closingTime, managerId, undefined, note, reason);
       }
     }
 

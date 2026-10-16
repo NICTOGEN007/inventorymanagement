@@ -1,4 +1,4 @@
-import { STOCK_MOVEMENT_TYPES } from '@ims/shared';
+import { ADJUSTMENT_REASONS, STOCK_MOVEMENT_TYPES } from '@ims/shared';
 import { model, Schema, type InferSchemaType } from 'mongoose';
 import { baseOptions } from './common.js';
 
@@ -23,6 +23,8 @@ const stockMovementSchema = new Schema(
     /** The document that caused the movement, if any. */
     refModel: { type: String, enum: ['Sale', 'PurchaseOrder', 'SaleReturn'] },
     refId: { type: Schema.Types.ObjectId, refPath: 'refModel' },
+    /** Why stock was adjusted by hand (adjustments only). */
+    reason: { type: String, enum: ADJUSTMENT_REASONS },
     note: { type: String, trim: true, maxlength: 300 },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
     /** Business time of the movement (may differ from createdAt for back-dated entries). */
@@ -34,10 +36,14 @@ const stockMovementSchema = new Schema(
 stockMovementSchema.index({ product: 1, occurredAt: -1 });
 stockMovementSchema.index({ type: 1, occurredAt: -1 });
 stockMovementSchema.index({ refModel: 1, refId: 1 });
+stockMovementSchema.index({ occurredAt: -1 });
 
 stockMovementSchema.pre('validate', function () {
-  if (this.type === 'adjustment' && !this.note) {
-    this.invalidate('note', 'A reason is required for stock adjustments');
+  if (this.type === 'adjustment' && !this.reason) {
+    this.invalidate('reason', 'A reason is required for stock adjustments');
+  }
+  if (this.reason === 'other' && !this.note) {
+    this.invalidate('note', 'Explain the adjustment when the reason is "Other"');
   }
 });
 

@@ -8,6 +8,9 @@ import { ComingSoonPage } from '@/pages/ComingSoonPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+import { AdjustStockPage } from '@/pages/inventory/AdjustStockPage';
+import { InventoryPage } from '@/pages/inventory/InventoryPage';
+import { MovementsPage } from '@/pages/inventory/MovementsPage';
 import { CategoriesPage } from '@/pages/products/CategoriesPage';
 import { ProductDetailPage } from '@/pages/products/ProductDetailPage';
 import { ProductFormPage } from '@/pages/products/ProductFormPage';
@@ -22,7 +25,7 @@ const guard = (permission: Permission, page: ReactNode) => (
 );
 
 /** Modules built in later steps; each is already guarded by its permission. */
-const BUILT = ['/', '/users', '/products', '/suppliers'];
+const BUILT = ['/', '/users', '/products', '/suppliers', '/inventory'];
 const PLANNED = NAV_ITEMS.filter((item) => !BUILT.includes(item.to));
 
 function HomeRoute() {
@@ -53,6 +56,9 @@ export function App() {
           <Route path="products/categories" element={guard('products:read', <CategoriesPage />)} />
           <Route path="products/:id" element={guard('products:read', <ProductDetailPage />)} />
           <Route path="products/:id/edit" element={guard('products:write', <ProductFormPage />)} />
+          <Route path="inventory" element={guard('inventory:read', <InventoryPage />)} />
+          <Route path="inventory/movements" element={guard('inventory:read', <MovementsPage />)} />
+          <Route path="inventory/adjust" element={guard('inventory:adjust', <AdjustStockPage />)} />
           <Route path="suppliers" element={guard('purchases:read', <SuppliersPage />)} />
           <Route path="users" element={guard('users:manage', <UsersPage />)} />
           <Route path="account" element={<AccountPage />} />

@@ -1,8 +1,8 @@
 import { formatINR, type Paginated, type ProductDto } from '@ims/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import { useAuth } from '@/auth/AuthProvider';
 import { StockBadge } from '@/components/StockBadge';
 import { ErrorAlert } from '@/components/ui/Alert';
@@ -16,6 +16,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { apiFetch } from '@/lib/api';
 import { formatQuantity } from '@/lib/format';
 import { useCategories } from '@/lib/queries';
+import { useUrlFilters } from '@/lib/useUrlFilters';
 
 export const PRODUCT_TABS = [
   { to: '/products', label: 'Products' },
@@ -26,28 +27,9 @@ const FILTER_KEYS = ['search', 'category', 'stock', 'status', 'sort'] as const;
 
 export function ProductsPage() {
   const { can } = useAuth();
-  const [params, setParams] = useSearchParams();
+  const { params, update, clear } = useUrlFilters();
   const categories = useCategories();
   const [search, setSearch] = useState(params.get('search') ?? '');
-
-  // React Router's functional setParams(prev => …) receives the params of the render it was
-  // created in, so a delayed update (the debounced search) could restore a filter the user has
-  // since cleared. Always start from the latest params instead.
-  const latestParams = useRef(params);
-  useEffect(() => {
-    latestParams.current = params;
-  }, [params]);
-
-  const update = (changes: Record<string, string | null>) => {
-    const next = new URLSearchParams(latestParams.current);
-    for (const [key, value] of Object.entries(changes)) {
-      if (value) next.set(key, value);
-      else next.delete(key);
-    }
-    if (!('page' in changes)) next.delete('page'); // a new filter starts from page 1
-    latestParams.current = next;
-    setParams(next, { replace: true });
-  };
 
   // Search after the user pauses typing, not on every keystroke.
   useEffect(() => {
@@ -166,7 +148,7 @@ export function ProductsPage() {
                   className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
                   onClick={() => {
                     setSearch('');
-                    setParams({}, { replace: true });
+                    clear();
                   }}
                 >
                   Clear filters

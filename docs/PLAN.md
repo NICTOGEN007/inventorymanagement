@@ -148,7 +148,7 @@ stateDiagram-v2
 - [x] **2. Data models + seed data** (with ER diagram): see [DATABASE.md](DATABASE.md)
 - [x] **3. Auth + roles**: see [AUTH.md](AUTH.md)
 - [x] **4. Products, categories, suppliers** (API + UI): see [API.md](API.md)
-- [ ] **5. Inventory ledger + stock adjustments**
+- [x] **5. Inventory ledger + stock adjustments**: stock history, counts, write-offs, valuation
 - [ ] **6. Purchase orders**
 - [ ] **7. POS + GST invoice PDF**
 - [ ] **8. Returns + customers**

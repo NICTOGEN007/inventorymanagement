@@ -9,5 +9,6 @@ export * from './permissions.js';
 export * from './pricing.js';
 export * from './schemas/auth.js';
 export * from './schemas/catalog.js';
+export * from './schemas/inventory.js';
 export * from './schemas/users.js';
 export * from './states.js';
