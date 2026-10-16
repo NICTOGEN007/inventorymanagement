@@ -157,6 +157,7 @@ afterwards). Without internet access, point it at an installed `mongod` instead:
 | Sign-in and sessions   | `/api/auth/login`, `refresh`, `logout`, `me`, `change-password` |
 | Staff accounts (admin) | `/api/users`                                                    |
 | Catalogue              | `/api/products`, `/api/categories`, `/api/suppliers`            |
+| Inventory              | `/api/inventory/movements`, `summary`, `adjustments`            |
 
 Every endpoint, its permission and its fields are listed in [docs/API.md](docs/API.md). Errors
 always have the shape `{ "error": { "code": "...", "message": "..." } }`.
