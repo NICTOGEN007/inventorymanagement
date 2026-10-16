@@ -20,6 +20,8 @@ COPY apps/web/package.json apps/web/
 COPY packages/shared/package.json packages/shared/
 RUN npm ci --workspace @ims/api --omit=dev && npm cache clean --force
 COPY --from=build /app/apps/api/dist apps/api/dist
+# Fonts for GST invoice PDFs.
+COPY apps/api/assets apps/api/assets
 USER node
 EXPOSE 4000
 CMD ["node", "apps/api/dist/server.js"]

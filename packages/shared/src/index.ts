@@ -11,5 +11,6 @@ export * from './schemas/auth.js';
 export * from './schemas/catalog.js';
 export * from './schemas/inventory.js';
 export * from './schemas/purchasing.js';
+export * from './schemas/sales.js';
 export * from './schemas/users.js';
 export * from './states.js';

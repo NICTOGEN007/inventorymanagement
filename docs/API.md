@@ -184,3 +184,48 @@ new cost = (stock before × old cost + received × order cost) / (stock before +
 
 Quantities still to arrive on `ordered` and `partially_received` orders show as `onOrder` on
 products, so the same goods are never ordered twice.
+
+## Sales (point of sale)
+
+| Method | Path                     | Permission     | Description                                                                  |
+| ------ | ------------------------ | -------------- | ---------------------------------------------------------------------------- |
+| POST   | `/sales`                 | `sales:create` | Bill a customer: prices, GST, invoice number and stock in one transaction    |
+| GET    | `/sales`                 | `sales:read`   | Newest first; `from`/`to` (IST dates), `search`, `method`, `cashier`, paging |
+| GET    | `/sales/:id`             | `sales:read`   | Full invoice with lines, tax and payments                                    |
+| GET    | `/sales/:id/invoice.pdf` | `sales:read`   | GST tax invoice as a PDF (A4)                                                |
+
+Body:
+
+```json
+{
+  "items": [{ "product": "<id>", "quantity": 2, "discount": 1000 }],
+  "customer": "<id>",
+  "payments": [
+    { "method": "cash", "amount": 50000 },
+    { "method": "upi", "amount": 73400, "reference": "UPI123456" }
+  ],
+  "clientRef": "f3c1b2a4-0d5e-4f6a-8b7c-9d0e1f2a3b4c"
+}
+```
+
+- Prices come from the product (`sellingPrice`, tax-inclusive or not); `discount` is per line in paise.
+- No `customer` means a walk-in customer in the shop's state. A customer registered in another
+  state makes the sale inter-state: **IGST** instead of CGST + SGST, place of supply = their state.
+- The total is rounded to the nearest rupee (`roundOff`). Payments must add up to exactly the total,
+  otherwise 400 with the difference. Change for cash is worked out by the till, not stored.
+- Asking for more than is in stock answers **409 `INSUFFICIENT_STOCK`** with the line at fault
+  (`details[0].path = ["items", 1, "quantity"]`). Nothing is saved and no invoice number is used.
+- Invoice numbers are gap-free per financial year: `INV/26-27/00042` (at most 16 characters).
+- `clientRef` (optional) is chosen by the till for each bill. Sending the same bill again returns
+  the invoice already issued (200) instead of billing twice.
+- Each line creates a `sale` stock movement with the cost at the time, for profit reports later.
+
+The list also returns `summary: { count, total }` for everything that matches the filters.
+
+## Customers
+
+| Method | Path         | Permission       | Description                                                 |
+| ------ | ------------ | ---------------- | ----------------------------------------------------------- |
+| GET    | `/customers` | `customers:read` | Active customers by `search` (name, phone or GSTIN), paging |
+
+Adding and editing customers comes with returns in step 8.

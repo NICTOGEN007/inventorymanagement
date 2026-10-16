@@ -1,8 +1,6 @@
-import { PAYMENT_METHODS, UNITS } from '@ims/shared';
+import { PAYMENT_METHODS, SALE_STATUSES, UNITS } from '@ims/shared';
 import { model, Schema, type InferSchemaType } from 'mongoose';
 import { baseOptions, gstRate, paise, quantity, signedPaise, stateCode } from './common.js';
-
-export const SALE_STATUSES = ['completed', 'partially_returned', 'returned', 'cancelled'] as const;
 
 /**
  * A line on the invoice. Product details are copied at the time of sale so that
@@ -82,6 +80,8 @@ const saleSchema = new Schema(
     cashier: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     soldAt: { type: Date, required: true, default: Date.now },
     notes: { type: String, trim: true, maxlength: 500 },
+    /** The till's own reference for this bill, so a resent request cannot bill twice. */
+    clientRef: { type: String, trim: true },
   },
   baseOptions,
 );
@@ -90,6 +90,10 @@ saleSchema.index({ soldAt: -1 });
 saleSchema.index({ customer: 1, soldAt: -1 });
 // Daily per-product demand aggregation for reports and forecasting.
 saleSchema.index({ 'items.product': 1, soldAt: 1 });
+saleSchema.index(
+  { clientRef: 1 },
+  { unique: true, partialFilterExpression: { clientRef: { $type: 'string' } } },
+);
 
 saleSchema.pre('validate', function () {
   const paid = this.payments.reduce((sum, p) => sum + p.amount, 0);

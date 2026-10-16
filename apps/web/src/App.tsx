@@ -11,6 +11,9 @@ import { NotFoundPage } from '@/pages/NotFoundPage';
 import { AdjustStockPage } from '@/pages/inventory/AdjustStockPage';
 import { InventoryPage } from '@/pages/inventory/InventoryPage';
 import { MovementsPage } from '@/pages/inventory/MovementsPage';
+import { PosPage } from '@/pages/pos/PosPage';
+import { SaleDetailPage } from '@/pages/pos/SaleDetailPage';
+import { SalesPage } from '@/pages/pos/SalesPage';
 import { CategoriesPage } from '@/pages/products/CategoriesPage';
 import { PurchaseOrderDetailPage } from '@/pages/purchases/PurchaseOrderDetailPage';
 import { PurchaseOrderFormPage } from '@/pages/purchases/PurchaseOrderFormPage';
@@ -28,7 +31,7 @@ const guard = (permission: Permission, page: ReactNode) => (
 );
 
 /** Modules built in later steps; each is already guarded by its permission. */
-const BUILT = ['/', '/users', '/products', '/suppliers', '/inventory', '/purchases'];
+const BUILT = ['/', '/pos', '/users', '/products', '/suppliers', '/inventory', '/purchases'];
 const PLANNED = NAV_ITEMS.filter((item) => !BUILT.includes(item.to));
 
 function HomeRoute() {
@@ -54,6 +57,9 @@ export function App() {
               }
             />
           ))}
+          <Route path="pos" element={guard('sales:create', <PosPage />)} />
+          <Route path="pos/sales" element={guard('sales:read', <SalesPage />)} />
+          <Route path="pos/sales/:id" element={guard('sales:read', <SaleDetailPage />)} />
           <Route path="products" element={guard('products:read', <ProductsPage />)} />
           <Route path="products/new" element={guard('products:write', <ProductFormPage />)} />
           <Route path="products/categories" element={guard('products:read', <CategoriesPage />)} />

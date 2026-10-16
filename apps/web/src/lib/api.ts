@@ -79,10 +79,13 @@ export interface ApiOptions extends Omit<RequestInit, 'body'> {
 }
 
 /**
- * Calls the API with the current access token. If the token has expired, renews it once
- * and retries; if that fails, signals that the session is over.
+ * Sends a request with the current access token. If the token has expired, renews it once and
+ * retries; if that fails, signals that the session is over.
  */
-export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promise<T> {
+async function authorizedFetch(
+  path: string,
+  options: ApiOptions = {},
+): Promise<{ res: Response; data?: unknown }> {
   const { body, headers, ...init } = options;
   const send = () =>
     fetch(`${BASE_URL}${path}`, {
@@ -97,26 +100,35 @@ export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promi
     });
 
   let res = await send();
-  let data = await parse(res);
-
-  if (
-    res.status === 401 &&
-    RENEWABLE.has(toApiError(res, data).code) &&
-    !path.startsWith('/auth/')
-  ) {
-    try {
-      await refreshSession();
-    } catch {
-      accessToken = null;
-      sessionEvents.dispatchEvent(new Event(SESSION_EXPIRED));
-      throw toApiError(res, data);
-    }
-    res = await send();
-    data = await parse(res);
+  if (res.status !== 401 || path.startsWith('/auth/')) return { res };
+  const data = await parse(res);
+  if (!RENEWABLE.has(toApiError(res, data).code)) return { res, data };
+  try {
+    await refreshSession();
+  } catch {
+    accessToken = null;
+    sessionEvents.dispatchEvent(new Event(SESSION_EXPIRED));
+    throw toApiError(res, data);
   }
+  res = await send();
+  return { res };
+}
 
-  if (!res.ok) throw toApiError(res, data);
+/** Calls the API and returns the JSON response, throwing an ApiError for non-2xx answers. */
+export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promise<T> {
+  const result = await authorizedFetch(path, options);
+  const data = 'data' in result ? result.data : await parse(result.res);
+  if (!result.res.ok) throw toApiError(result.res, data);
   return data as T;
+}
+
+/** Downloads a file (such as an invoice PDF) from the API with the user's credentials. */
+export async function apiFetchBlob(path: string): Promise<Blob> {
+  const result = await authorizedFetch(path);
+  if (!result.res.ok) {
+    throw toApiError(result.res, 'data' in result ? result.data : await parse(result.res));
+  }
+  return result.res.blob();
 }
 
 /** Field errors from a server validation response, keyed by the first path segment. */

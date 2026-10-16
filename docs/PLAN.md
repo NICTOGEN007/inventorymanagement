@@ -150,7 +150,7 @@ stateDiagram-v2
 - [x] **4. Products, categories, suppliers** (API + UI): see [API.md](API.md)
 - [x] **5. Inventory ledger + stock adjustments**: stock history, counts, write-offs, valuation
 - [x] **6. Purchase orders**: drafts, GST, partial deliveries, weighted-average cost
-- [ ] **7. POS + GST invoice PDF**
+- [x] **7. POS + GST invoice PDF**: barcode billing, split payments, IGST for other states, invoice PDF
 - [ ] **8. Returns + customers**
 - [ ] **9. Dashboard, reports, exports**
 - [ ] **9.5 AI: Forecasting engine, restock plans with confirmation, proactive alerts**

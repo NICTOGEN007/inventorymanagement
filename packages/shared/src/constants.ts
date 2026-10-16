@@ -76,3 +76,19 @@ export const OPEN_PURCHASE_ORDER_STATUSES: readonly PurchaseOrderStatus[] = [
   'ordered',
   'partially_received',
 ];
+
+export const PAYMENT_METHOD_LABELS: Readonly<Record<PaymentMethod, string>> = {
+  cash: 'Cash',
+  upi: 'UPI',
+  card: 'Card',
+};
+
+export const SALE_STATUSES = ['completed', 'partially_returned', 'returned', 'cancelled'] as const;
+export type SaleStatus = (typeof SALE_STATUSES)[number];
+
+export const SALE_STATUS_LABELS: Readonly<Record<SaleStatus, string>> = {
+  completed: 'Completed',
+  partially_returned: 'Partly returned',
+  returned: 'Returned',
+  cancelled: 'Cancelled',
+};

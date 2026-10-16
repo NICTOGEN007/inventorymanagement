@@ -1,7 +1,9 @@
 import type {
   AdjustmentReason,
+  PaymentMethod,
   PurchaseOrderStatus,
   Role,
+  SaleStatus,
   StockMovementType,
   Unit,
 } from './constants.js';
@@ -212,4 +214,82 @@ export interface PurchaseOrderDto extends PurchaseOrderSummaryDto {
   cancelledAt?: string;
   cancelReason?: string;
   createdBy?: Ref;
+}
+
+export interface CustomerSummaryDto {
+  id: string;
+  name: string;
+  phone?: string;
+  gstin?: string;
+  /** Place of supply when set; otherwise the shop's own state. */
+  stateCode?: StateCode;
+}
+
+export interface PaymentDto {
+  method: PaymentMethod;
+  /** Paise. */
+  amount: number;
+  reference?: string;
+}
+
+export interface SaleItemDto {
+  product: { id: string; name: string; sku: string; unit: Unit };
+  hsnCode: string;
+  quantity: number;
+  /** Price per unit as charged (incl. GST when taxInclusive). */
+  unitPrice: number;
+  taxInclusive: boolean;
+  gstRate: GstRate;
+  /** unitPrice × quantity, before discount. */
+  gross: number;
+  discount: number;
+  taxable: number;
+  cgst: number;
+  sgst: number;
+  igst: number;
+  total: number;
+  returnedQuantity: number;
+}
+
+/** Buyer as printed on the invoice; absent for a walk-in customer. */
+export interface SaleCustomerDto {
+  id?: string;
+  name: string;
+  phone?: string;
+  gstin?: string;
+  stateCode?: StateCode;
+}
+
+export interface SaleSummaryDto {
+  id: string;
+  invoiceNumber: string;
+  soldAt: string;
+  customer?: SaleCustomerDto;
+  itemCount: number;
+  totalTax: number;
+  grandTotal: number;
+  paymentMethods: PaymentMethod[];
+  status: SaleStatus;
+  cashier: Ref;
+}
+
+export interface SaleDto extends Omit<SaleSummaryDto, 'paymentMethods'> {
+  placeOfSupply: StateCode;
+  interState: boolean;
+  items: SaleItemDto[];
+  gross: number;
+  discount: number;
+  taxable: number;
+  cgst: number;
+  sgst: number;
+  igst: number;
+  /** Adjustment to the nearest rupee, in paise (−50 to +49). */
+  roundOff: number;
+  payments: PaymentDto[];
+  notes?: string;
+}
+
+export interface SaleList extends Paginated<SaleSummaryDto> {
+  /** Count and value of every sale matching the filters, not just this page. */
+  summary: { count: number; total: number };
 }
