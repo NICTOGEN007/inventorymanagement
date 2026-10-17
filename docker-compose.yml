@@ -4,7 +4,10 @@ services:
   mongo:
     image: mongo:8.0
     # A single-node replica set: MongoDB only supports multi-document transactions on replica sets.
-    command: ['--replSet', 'rs0', '--bind_ip_all']
+    # --quiet: no log line for every connection (the health check connects every few seconds).
+    command: ['--replSet', 'rs0', '--bind_ip_all', '--quiet']
+    # Keep the database's logs out of `docker compose up`; see them with `docker compose logs mongo`.
+    attach: false
     ports:
       - '27017:27017'
     volumes:
