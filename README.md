@@ -152,6 +152,8 @@ afterwards). Without internet access, point it at an installed `mongod` instead:
 | `REFRESH_TOKEN_TTL_DAYS`   | `7`                                                                        | How long a sign-in lasts without activity           |
 | `COOKIE_SECURE`            | `true` in production                                                       | Refresh cookie over HTTPS only                      |
 | `COOKIE_SAME_SITE`         | `strict`                                                                   | `none` only if web and API are on different sites   |
+| `GEMINI_API_KEY`           | (none)                                                                     | Turns on the AI assistant (Google AI Studio key)    |
+| `GEMINI_MODEL`             | `gemini-2.5-flash`                                                         | Gemini model the assistant uses                     |
 
 ## API
 
