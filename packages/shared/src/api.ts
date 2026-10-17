@@ -505,3 +505,15 @@ export interface RestockPlanDto extends RestockPlanSummaryDto {
   /** Why a draft expired. */
   expiredReason?: string;
 }
+
+// --- AI assistant ------------------------------------------------------------------------------
+
+export type AssistantStatusDto = { enabled: true; model: string } | { enabled: false };
+
+export interface AssistantReplyDto {
+  reply: string;
+  /** Tools the model called to answer, e.g. ["get_sales_summary"]. */
+  toolsUsed: string[];
+  /** The restock plan the assistant prepared or changed, if it did. */
+  plan?: RestockPlanDto;
+}

@@ -376,3 +376,26 @@ products were ordered since the plan was made, the plan expires instead (`409`),
 ordered twice. Otherwise it places one `ordered` purchase order per supplier, each noted "From
 restock plan RST/26-27/00001", in one transaction, and writes an audit log entry. The AI assistant
 (step 9.6) will be able to prepare and edit drafts but has no way to confirm one.
+
+## AI assistant
+
+Needs `assistant:use` (admin and manager). Off unless `GEMINI_API_KEY` is set (a free Google AI
+Studio key); `GEMINI_MODEL` picks the model (default `gemini-2.5-flash`).
+
+| Method | Path                | Description                                                |
+| ------ | ------------------- | ---------------------------------------------------------- |
+| GET    | `/assistant/status` | `{ enabled: true, model }` or `{ enabled: false }`         |
+| POST   | `/assistant/chat`   | `{ messages: [{ role: "user" \| "assistant", content }] }` |
+
+The browser keeps the conversation and sends it with each question (at most 20 messages, the last
+one the user's). The answer is `{ reply, toolsUsed, plan? }`: `plan` is the restock plan the
+assistant prepared or changed. Answers `503` with `ASSISTANT_DISABLED` when there is no key and
+`ASSISTANT_UNAVAILABLE` when Gemini is busy or rejects the key; at most 15 questions a minute per
+person (`429`).
+
+The model answers only from **tools** that call the same services as the screens:
+`get_sales_summary`, `get_product_sales`, `get_restock_status`, `get_product_forecast`,
+`get_gst_summary`, `get_stock_value`, `create_restock_plan` and `update_restock_plan` (money in
+rupees). It can prepare and change a draft plan but has **no tool to confirm one**: only a person
+can place orders, from the plan or the chat card. Each chat is audit-logged with the tools used,
+not the question. Questions and the figures the tools return are sent to Google.

@@ -38,6 +38,13 @@ const envSchema = z.object({
    * Use `none` (with HTTPS) only if they are deployed on different sites.
    */
   COOKIE_SAME_SITE: z.enum(['strict', 'lax', 'none']).default('strict'),
+  /** Google AI Studio key for the assistant. Without it the assistant is off; all else works. */
+  GEMINI_API_KEY: z
+    .string()
+    .trim()
+    .transform((v) => v || undefined)
+    .optional(),
+  GEMINI_MODEL: z.string().trim().min(1).default('gemini-2.5-flash'),
 });
 
 /** Used only outside production so the app runs without setup. Never use it for real data. */

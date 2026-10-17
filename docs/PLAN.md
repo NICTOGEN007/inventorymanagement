@@ -128,9 +128,10 @@ stateDiagram-v2
 - The model is given **tools** that call our own services: sales summary, top products, low stock,
   forecasts, GST summary, `create_restock_plan` and `update_restock_plan`. It never invents numbers.
 - Example: "Can you restock based on previous demand? Keep it under ₹50,000" → the AI calls
-  `create_restock_plan` → the chat shows the plan as an interactive card with editable quantities
-  and a **Confirm & place orders** button → "make the oil 100" → `update_restock_plan`.
-- Without `GEMINI_API_KEY` the chat is hidden and everything else, including Smart Restock, works.
+  `create_restock_plan` → the chat shows the plan as a card with a **Confirm & place orders**
+  button and a link to edit it → "make the oil 100" → `update_restock_plan`.
+- Without `GEMINI_API_KEY` the assistant page explains how to turn it on; everything else,
+  including Smart Restock, works.
 - Privacy note: chat questions and the summary figures the tools return are sent to Google.
   Check Google's terms for the free tier before using real shop data.
 
@@ -154,5 +155,5 @@ stateDiagram-v2
 - [x] **8. Returns + customers**: credit notes, exact refunds, restocking, customer profiles and history
 - [x] **9. Dashboard, reports, exports**: KPIs vs previous period, sales trend, profit, GST summary with set-off, stock valuation, CSV/PDF
 - [x] **9.5 AI: Forecasting engine, restock plans with confirmation, proactive alerts**
-- [ ] **9.6 AI: Gemini assistant that answers questions and prepares restock plans**
+- [x] **9.6 AI: Gemini assistant that answers questions and prepares restock plans**
 - [ ] **10. End-to-end tests, docs (SRS, DFD, use-case, sequence diagrams), screenshots, deployment**

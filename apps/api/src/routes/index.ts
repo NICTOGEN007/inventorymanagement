@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { assistantRouter } from '../modules/assistant/routes.js';
 import { createAuthRouter } from '../modules/auth/routes.js';
 import { categoriesRouter } from '../modules/categories/routes.js';
 import { customersRouter } from '../modules/customers/routes.js';
@@ -30,6 +31,7 @@ export function createApiRouter() {
   api.use('/reports', reportsRouter);
   api.use('/forecast', forecastRouter);
   api.use('/restock', restockRouter);
+  api.use('/assistant', assistantRouter);
   api.use('/customers', customersRouter);
   api.use('/settings', settingsRouter);
   return api;

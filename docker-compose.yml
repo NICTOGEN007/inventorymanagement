@@ -36,6 +36,8 @@ services:
       # Demo default so `docker compose up` works out of the box. For any real use, set your own:
       #   JWT_ACCESS_SECRET=$(openssl rand -hex 32) docker compose up
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-demo-only-secret-replace-me-before-real-use-0123456789}
+      # Optional: turns on the AI assistant (GEMINI_API_KEY=... docker compose up).
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       # The demo is served over plain HTTP; set to true behind HTTPS.
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
     ports:

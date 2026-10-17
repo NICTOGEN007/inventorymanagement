@@ -11,6 +11,7 @@ export * from './permissions.js';
 export * from './pricing.js';
 export * from './reports.js';
 export * from './returns.js';
+export * from './schemas/assistant.js';
 export * from './schemas/auth.js';
 export * from './schemas/catalog.js';
 export * from './schemas/customers.js';

@@ -4,6 +4,7 @@ import { RequireAuth, RequirePermission } from '@/auth/guards';
 import { Layout } from '@/components/Layout';
 import { NAV_ITEMS } from '@/navigation';
 import { AccountPage } from '@/pages/AccountPage';
+import { AssistantPage } from '@/pages/assistant/AssistantPage';
 import { ComingSoonPage } from '@/pages/ComingSoonPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { LoginPage } from '@/pages/LoginPage';
@@ -52,6 +53,7 @@ const BUILT = [
   '/customers',
   '/reports',
   '/restock',
+  '/assistant',
 ];
 const PLANNED = NAV_ITEMS.filter((item) => !BUILT.includes(item.to));
 
@@ -132,6 +134,7 @@ export function App() {
             element={guard('forecast:read', <ProductForecastPage />)}
           />
           <Route path="users" element={guard('users:manage', <UsersPage />)} />
+          <Route path="assistant" element={guard('assistant:use', <AssistantPage />)} />
           <Route path="account" element={<AccountPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
