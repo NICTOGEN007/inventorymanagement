@@ -134,31 +134,41 @@ function placement(input: PurchaseOrderInput, leadTimeDays: number) {
   };
 }
 
+/** Creates an order inside the caller's transaction; restock plans place several at once. */
+export async function insertPurchaseOrder(
+  input: PurchaseOrderInput,
+  userId: string,
+  session: ClientSession,
+): Promise<{ id: Types.ObjectId; poNumber: string }> {
+  const { settings, supplier, interState, items, totals } = await orderContents(input, session);
+  const now = new Date();
+  const seq = await nextSequence(`purchaseOrder:${financialYear(now)}`, session);
+  const poNumber = formatDocumentNumber(settings.purchaseOrderPrefix, now, seq);
+  const [po] = await PurchaseOrderModel.create(
+    [
+      {
+        poNumber,
+        supplier: supplier._id,
+        interState,
+        items,
+        ...totals,
+        ...placement(input, supplier.leadTimeDays),
+        notes: input.notes,
+        createdBy: userId,
+      },
+    ],
+    { session },
+  );
+  return { id: po!._id, poNumber };
+}
+
 export async function createPurchaseOrder(
   input: PurchaseOrderInput,
   userId: string,
 ): Promise<PurchaseOrderDto> {
-  const id = await mongoose.connection.transaction(async (session) => {
-    const { settings, supplier, interState, items, totals } = await orderContents(input, session);
-    const now = new Date();
-    const seq = await nextSequence(`purchaseOrder:${financialYear(now)}`, session);
-    const [po] = await PurchaseOrderModel.create(
-      [
-        {
-          poNumber: formatDocumentNumber(settings.purchaseOrderPrefix, now, seq),
-          supplier: supplier._id,
-          interState,
-          items,
-          ...totals,
-          ...placement(input, supplier.leadTimeDays),
-          notes: input.notes,
-          createdBy: userId,
-        },
-      ],
-      { session },
-    );
-    return po!._id;
-  });
+  const { id } = await mongoose.connection.transaction((session) =>
+    insertPurchaseOrder(input, userId, session),
+  );
   return getPurchaseOrder(String(id));
 }
 

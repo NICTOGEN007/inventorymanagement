@@ -27,6 +27,10 @@ import { PurchasesPage } from '@/pages/purchases/PurchasesPage';
 import { ProductDetailPage } from '@/pages/products/ProductDetailPage';
 import { ProductFormPage } from '@/pages/products/ProductFormPage';
 import { ProductsPage } from '@/pages/products/ProductsPage';
+import { ProductForecastPage } from '@/pages/restock/ProductForecastPage';
+import { RestockPlanPage } from '@/pages/restock/RestockPlanPage';
+import { RestockPlansPage } from '@/pages/restock/RestockPlansPage';
+import { SmartRestockPage } from '@/pages/restock/SmartRestockPage';
 import { SuppliersPage } from '@/pages/suppliers/SuppliersPage';
 import { UsersPage } from '@/pages/users/UsersPage';
 import type { Permission } from '@ims/shared';
@@ -47,6 +51,7 @@ const BUILT = [
   '/purchases',
   '/customers',
   '/reports',
+  '/restock',
 ];
 const PLANNED = NAV_ITEMS.filter((item) => !BUILT.includes(item.to));
 
@@ -119,6 +124,13 @@ export function App() {
             element={guard('purchases:manage', <PurchaseOrderFormPage />)}
           />
           <Route path="suppliers" element={guard('purchases:read', <SuppliersPage />)} />
+          <Route path="restock" element={guard('forecast:read', <SmartRestockPage />)} />
+          <Route path="restock/plans" element={guard('forecast:read', <RestockPlansPage />)} />
+          <Route path="restock/plans/:id" element={guard('forecast:read', <RestockPlanPage />)} />
+          <Route
+            path="restock/products/:id"
+            element={guard('forecast:read', <ProductForecastPage />)}
+          />
           <Route path="users" element={guard('users:manage', <UsersPage />)} />
           <Route path="account" element={<AccountPage />} />
           <Route path="*" element={<NotFoundPage />} />

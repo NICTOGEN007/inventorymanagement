@@ -50,6 +50,7 @@ const product = (overrides: Partial<ProductDto>): ProductDto => ({
   stock: 40,
   reorderLevel: 20,
   reorderQuantity: 48,
+  packSize: 1,
   stockStatus: 'ok',
   onOrder: 0,
   preferredSupplier: { id: '64b000000000000000000003', name: 'Greenfield Dairy' },

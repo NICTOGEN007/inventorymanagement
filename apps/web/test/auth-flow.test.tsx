@@ -94,7 +94,8 @@ describe('role-based access', () => {
     renderApp('/');
     const nav = await screen.findByRole('navigation', { name: 'Main' });
     expect(within(nav).getByRole('link', { name: 'Users' })).toBeInTheDocument();
-    expect(within(nav).getAllByRole('link')).toHaveLength(10);
+    expect(within(nav).getByRole('link', { name: 'Smart Restock' })).toBeInTheDocument();
+    expect(within(nav).getAllByRole('link')).toHaveLength(11);
   });
 
   it('hides user management from managers', async () => {

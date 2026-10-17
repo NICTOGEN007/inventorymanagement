@@ -28,6 +28,7 @@ const product = (overrides: Partial<ProductDto>): ProductDto => ({
   stock: 10,
   reorderLevel: 33,
   reorderQuantity: 66,
+  packSize: 1,
   stockStatus: 'low',
   onOrder: 0,
   isActive: true,

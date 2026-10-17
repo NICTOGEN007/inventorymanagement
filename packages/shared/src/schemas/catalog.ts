@@ -122,6 +122,8 @@ const productFields = {
   taxInclusive: z.boolean(),
   reorderLevel: z.number().min(0, 'Cannot be negative'),
   reorderQuantity: z.number().min(0, 'Cannot be negative'),
+  /** Restock orders are rounded up to whole packs; 1 when it is ordered by the unit. */
+  packSize: z.number().int('Use a whole number').min(1, 'At least 1').max(1000).optional(),
   preferredSupplier: optional(objectId),
   imageUrl: optional(z.url('Enter a full URL starting with https://')),
   isActive: z.boolean().optional(),

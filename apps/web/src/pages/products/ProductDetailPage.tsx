@@ -6,7 +6,7 @@ import {
   type StockMovementDto,
 } from '@ims/shared';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Pencil } from 'lucide-react';
+import { ArrowLeft, Pencil, Sparkles } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
 import { useAuth } from '@/auth/AuthProvider';
@@ -63,7 +63,16 @@ export function ProductDetailPage() {
               {!p.isActive && <Badge>Inactive</Badge>}
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            {can('forecast:read') && p.isActive && (
+              <Link
+                to={`/restock/products/${p.id}`}
+                className={buttonClass({ variant: 'secondary' })}
+              >
+                <Sparkles className="size-4" aria-hidden />
+                Demand forecast
+              </Link>
+            )}
             {can('inventory:adjust') && (
               <Link
                 to={`/inventory/adjust?product=${p.id}`}
@@ -127,6 +136,7 @@ export function ProductDetailPage() {
           <dl className="mt-4 space-y-2 text-sm">
             <Row label="Reorder level" value={formatQuantity(p.reorderLevel, p.unit)} />
             <Row label="Usual order" value={formatQuantity(p.reorderQuantity, p.unit)} />
+            {p.packSize > 1 && <Row label="Pack size" value={formatQuantity(p.packSize, p.unit)} />}
             <Row
               label="On order"
               value={p.onOrder > 0 ? formatQuantity(p.onOrder, p.unit) : 'Nothing'}

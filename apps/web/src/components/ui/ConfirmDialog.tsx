@@ -10,6 +10,8 @@ interface ConfirmDialogProps {
   confirmLabel: string;
   loading?: boolean;
   error?: string | null;
+  /** Red for destructive actions (the default), indigo for ones that are not. */
+  confirmVariant?: 'danger' | 'primary';
   onConfirm(): void;
   onClose(): void;
 }
@@ -21,6 +23,7 @@ export function ConfirmDialog({
   confirmLabel,
   loading,
   error,
+  confirmVariant = 'danger',
   onConfirm,
   onClose,
 }: ConfirmDialogProps) {
@@ -33,7 +36,7 @@ export function ConfirmDialog({
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="danger" loading={loading} onClick={onConfirm}>
+          <Button variant={confirmVariant} loading={loading} onClick={onConfirm}>
             {confirmLabel}
           </Button>
         </div>

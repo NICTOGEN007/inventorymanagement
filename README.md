@@ -5,10 +5,12 @@ GST-compliant invoicing, AI demand forecasting and an AI assistant.
 
 Built with the **MERN** stack in TypeScript: MongoDB, Express, React and Node.js.
 
-> **Status:** Steps 1–9 of 10 are complete: scaffolding, database and demo data, sign-in with
+> **Status:** Steps 1–9.5 are complete: scaffolding, database and demo data, sign-in with
 > roles, the product catalogue, inventory, purchase orders with deliveries, the point of sale
-> with GST invoices, customer returns with credit notes and customer profiles, and the dashboard
-> with sales, product, GST and stock reports (CSV and PDF). See the roadmap in [docs/PLAN.md](docs/PLAN.md).
+> with GST invoices, customer returns with credit notes and customer profiles, the dashboard
+> with sales, product, GST and stock reports (CSV and PDF), and Smart Restock: demand forecasts
+> and restock plans that place purchase orders once the owner confirms. Next: the Gemini
+> assistant (9.6) and final testing and deployment (10). See [docs/PLAN.md](docs/PLAN.md).
 
 ## Features (planned)
 

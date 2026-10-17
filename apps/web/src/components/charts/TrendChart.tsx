@@ -1,5 +1,6 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import { useId, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { cn } from '@/lib/cn';
+import { niceStep, useWidth } from './scale';
 
 export interface TrendPoint {
   key: string;
@@ -22,29 +23,6 @@ interface Props {
 }
 
 const MARGIN = { top: 12, right: 12, bottom: 26, left: 52 };
-
-/** 1, 2, 2.5 or 5 × a power of ten: tick steps people read easily. */
-function niceStep(raw: number) {
-  if (raw <= 0) return 1;
-  const power = 10 ** Math.floor(Math.log10(raw));
-  const unit = raw / power;
-  return (unit <= 1 ? 1 : unit <= 2 ? 2 : unit <= 2.5 ? 2.5 : unit <= 5 ? 5 : 10) * power;
-}
-
-function useWidth<T extends HTMLElement>() {
-  const ref = useRef<T>(null);
-  const [width, setWidth] = useState(640);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver(([entry]) => {
-      if (entry) setWidth(Math.max(240, Math.round(entry.contentRect.width)));
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-  return { ref, width };
-}
 
 /**
  * One series over time: a 2px line over a light wash, a crosshair that snaps to the nearest

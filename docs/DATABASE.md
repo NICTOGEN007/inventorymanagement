@@ -36,6 +36,11 @@ erDiagram
   PURCHASE_ORDER ||--|{ PO_ITEM : contains
   PURCHASE_ORDER ||--o{ PO_RECEIPT : "delivered in"
 
+  USER ||--o{ RESTOCK_PLAN : "prepares, confirms"
+  RESTOCK_PLAN ||--|{ PLAN_ITEM : lists
+  PRODUCT ||--o{ PLAN_ITEM : "suggested as"
+  RESTOCK_PLAN |o--o{ PURCHASE_ORDER : "places on confirm"
+
   SALE ||--o{ STOCK_MOVEMENT : causes
   PURCHASE_ORDER ||--o{ STOCK_MOVEMENT : causes
   SALE_RETURN ||--o{ STOCK_MOVEMENT : causes
@@ -93,6 +98,7 @@ erDiagram
     number stock "kept in sync with ledger"
     number reorderLevel
     number reorderQuantity
+    int packSize "restock orders round up to it"
   }
   CUSTOMER {
     ObjectId _id PK
@@ -177,6 +183,25 @@ erDiagram
     date expectedAt
     date receivedAt
   }
+  RESTOCK_PLAN {
+    ObjectId _id PK
+    string planNumber UK "RST/26-27/00001"
+    enum status "draft, confirmed, cancelled, expired"
+    enum source "manual, alert, assistant"
+    int budget "paise, optional"
+    date expiresAt "24 h after it is made"
+    ObjectId confirmedBy FK
+  }
+  PLAN_ITEM {
+    ObjectId product FK
+    ObjectId supplier FK
+    number stock "when the plan was made"
+    number onOrder "re-checked on confirm"
+    number dailyDemand
+    number suggestedQuantity
+    number quantity "owner can change"
+    string_array reasons
+  }
   PO_RECEIPT {
     date receivedAt
     ObjectId receivedBy FK
@@ -227,6 +252,7 @@ erDiagram
 | `sales`          | Invoices with embedded line items and payments                    |
 | `salereturns`    | Credit notes against earlier sales                                |
 | `purchaseorders` | Orders to suppliers with embedded line items                      |
+| `restockplans`   | Draft order lists from the forecasts, confirmed by a person       |
 | `stockmovements` | The stock ledger: one immutable entry per stock change            |
 | `auditlogs`      | Who changed what, for sensitive actions                           |
 

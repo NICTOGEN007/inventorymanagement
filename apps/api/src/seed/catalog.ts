@@ -1,4 +1,11 @@
-import type { GstRate, Role, StateCode, Unit } from '@ims/shared';
+import {
+  FESTIVAL_CALENDAR,
+  type Festival,
+  type GstRate,
+  type Role,
+  type StateCode,
+  type Unit,
+} from '@ims/shared';
 
 /**
  * Demo catalogue for a neighbourhood supermarket in Bengaluru.
@@ -251,38 +258,33 @@ export const PRODUCTS: readonly ProductDef[] = [
   { sku: 'ELC-004', name: 'Wired Earphones', category: 'ELC', brand: 'VoltEdge', unit: 'pcs', hsnCode: '8518', gstRate: 18, mrp: 399, margin: 0.35, supplier: 'metro', popularity: 0.5, deadForDays: 120 },
 ];
 
-export interface FestivalDef {
-  name: string;
-  /** IST calendar date (YYYY-MM-DD). Lunar festival dates are approximate. */
-  date: string;
-  /** Shopping builds up over this many days before the festival. */
-  leadDays: number;
+export interface FestivalDef extends Festival {
   /** Peak multiplier on store footfall. */
   footfall: number;
   /** Peak multiplier on products with season "festival". */
   festiveGoods: number;
 }
 
-export const FESTIVALS: readonly FestivalDef[] = [
-  { name: 'Dussehra', date: '2025-10-02', leadDays: 4, footfall: 1.3, festiveGoods: 2 },
-  { name: 'Diwali', date: '2025-10-20', leadDays: 8, footfall: 1.8, festiveGoods: 4 },
-  { name: 'Christmas', date: '2025-12-25', leadDays: 3, footfall: 1.2, festiveGoods: 1.5 },
-  { name: 'Makar Sankranti', date: '2026-01-14', leadDays: 2, footfall: 1.2, festiveGoods: 2 },
-  { name: 'Holi', date: '2026-03-04', leadDays: 3, footfall: 1.3, festiveGoods: 2 },
-  { name: 'Eid al-Fitr', date: '2026-03-20', leadDays: 3, footfall: 1.3, festiveGoods: 2.5 },
-  { name: 'Raksha Bandhan', date: '2026-08-28', leadDays: 2, footfall: 1.2, festiveGoods: 2 },
-  { name: 'Ganesh Chaturthi', date: '2026-09-14', leadDays: 3, footfall: 1.4, festiveGoods: 2.5 },
-  { name: 'Dussehra', date: '2026-10-20', leadDays: 9, footfall: 1.25, festiveGoods: 1.8 },
-  { name: 'Diwali', date: '2026-11-08', leadDays: 8, footfall: 1.8, festiveGoods: 4 },
-  { name: 'Christmas', date: '2026-12-25', leadDays: 3, footfall: 1.2, festiveGoods: 1.5 },
-  { name: 'Makar Sankranti', date: '2027-01-14', leadDays: 2, footfall: 1.2, festiveGoods: 2 },
-  { name: 'Eid al-Fitr', date: '2027-03-10', leadDays: 3, footfall: 1.3, festiveGoods: 2.5 },
-  { name: 'Holi', date: '2027-03-22', leadDays: 3, footfall: 1.3, festiveGoods: 2 },
-  { name: 'Raksha Bandhan', date: '2027-08-17', leadDays: 2, footfall: 1.2, festiveGoods: 2 },
-  { name: 'Ganesh Chaturthi', date: '2027-09-04', leadDays: 3, footfall: 1.4, festiveGoods: 2.5 },
-  { name: 'Dussehra', date: '2027-10-09', leadDays: 9, footfall: 1.25, festiveGoods: 1.8 },
-  { name: 'Diwali', date: '2027-10-29', leadDays: 8, footfall: 1.8, festiveGoods: 4 },
-];
+/** How strongly each festival moves the simulated shop; the dates come from the shared calendar. */
+const FESTIVAL_EFFECTS: Record<string, { footfall: number; festiveGoods: number }> = {
+  Dussehra: { footfall: 1.3, festiveGoods: 2 },
+  Diwali: { footfall: 1.8, festiveGoods: 4 },
+  Christmas: { footfall: 1.2, festiveGoods: 1.5 },
+  'Makar Sankranti': { footfall: 1.2, festiveGoods: 2 },
+  Holi: { footfall: 1.3, festiveGoods: 2 },
+  'Eid al-Fitr': { footfall: 1.3, festiveGoods: 2.5 },
+  'Raksha Bandhan': { footfall: 1.2, festiveGoods: 2 },
+  'Ganesh Chaturthi': { footfall: 1.4, festiveGoods: 2.5 },
+};
+
+export const FESTIVALS: readonly FestivalDef[] = FESTIVAL_CALENDAR.map((f) => {
+  const effect = FESTIVAL_EFFECTS[f.name];
+  if (!effect) throw new Error(`No simulated effect for ${f.name}`);
+  // Dussehra 2026 and 2027 fall close to Diwali, so their own lift is a little smaller.
+  return f.name === 'Dussehra' && f.date > '2026-01-01'
+    ? { ...f, footfall: 1.25, festiveGoods: 1.8 }
+    : { ...f, ...effect };
+});
 
 export const FIRST_NAMES = [
   'Aarav',

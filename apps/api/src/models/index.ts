@@ -4,6 +4,7 @@ export * from './counter.js';
 export * from './customer.js';
 export * from './product.js';
 export * from './purchase-order.js';
+export * from './restock-plan.js';
 export * from './sale.js';
 export * from './sale-return.js';
 export * from './session.js';

@@ -82,8 +82,9 @@ List filters: `search` (name, SKU, barcode, brand), `category`, `supplier`, `sto
 Product fields: `sku` (3–32 letters, digits, dashes; stored upper-case), `barcode?` (EAN-8/UPC-A/
 EAN-13/GTIN-14 with a valid check digit), `name`, `description?`, `category`, `brand?`, `unit`,
 `hsnCode` (4/6/8 digits), `gstRate` (0, 0.25, 3, 5, 18, 40), `costPrice` (excl. GST),
-`sellingPrice`, `mrp?`, `taxInclusive`, `reorderLevel`, `reorderQuantity`, `preferredSupplier?`,
-`imageUrl?`, `isActive?`.
+`sellingPrice`, `mrp?`, `taxInclusive`, `reorderLevel`, `reorderQuantity`, `packSize?` (whole
+number ≥ 1, default 1: restock orders round up to whole packs), `preferredSupplier?`, `imageUrl?`,
+`isActive?`.
 
 Responses also include `stock`, `stockStatus` (`ok` / `low` / `out`), `onOrder` (still to arrive
 on open purchase orders) and `category`/`preferredSupplier` as `{ id, name }`.
@@ -325,3 +326,53 @@ Every report has the same shape, so the web app, the CSV and the PDF all come fr
 for one table (`section=<id>`, the first by default). CSV has a UTF-8 byte-order mark so Excel reads
 the ₹ sign, money in rupees with two decimals, and text that a spreadsheet would run as a formula
 (`=`, `+`, `-`, `@`) starts with an apostrophe.
+
+## Forecasts and Smart Restock
+
+Reading needs `forecast:read` (admin and manager). Preparing, editing, confirming and cancelling
+plans needs `purchases:manage`.
+
+| Method | Path                         | Description                                                                           |
+| ------ | ---------------------------- | ------------------------------------------------------------------------------------- |
+| GET    | `/forecast`                  | Every active product: status, expected daily sales, days left, suggestion, why        |
+| GET    | `/forecast/accuracy`         | Weekly error over the last 4 weeks, held back from fitting, vs a moving average       |
+| GET    | `/forecast/products/:id`     | Last 8 weeks of sales, next 4 weeks forecast with an 80% range, fitted model          |
+| GET    | `/restock/alerts`            | How many products need reordering, the most urgent, and any plan waiting              |
+| GET    | `/restock/plans`             | Plans, newest first; `status` = `draft`, `confirmed`, `cancelled`, `expired`          |
+| POST   | `/restock/plans`             | Prepare a draft from what needs reordering now                                        |
+| GET    | `/restock/plans/:id`         | A plan grouped by supplier, with GST per line and per supplier                        |
+| PATCH  | `/restock/plans/:id`         | Change quantities, remove lines or add products: `{ items: [{ product, quantity }] }` |
+| POST   | `/restock/plans/:id/confirm` | Place one purchase order per supplier                                                 |
+| POST   | `/restock/plans/:id/cancel`  | Cancel a draft                                                                        |
+
+**Forecasting** runs in the API, with no outside service. For each product, daily sales for the
+last 371 days (IST, up to yesterday) are fitted with Holt-Winters exponential smoothing: a level,
+a damped trend (φ = 0.8) and a weekly pattern, with α, β and γ chosen by a grid search on
+one-day-ahead error. Days that ended with an empty shelf count as at least what sold, so an empty
+shelf is not read as "nobody wants it". Festival build-ups (Diwali, Dussehra, Eid, …) are left out
+of the fit and their lift is learned from past festivals, pulled towards 1× when there is little
+evidence. Products with under 28 days of sales use a moving average.
+
+**Status** of each product: `reorder` (stock + on order is at or below the reorder point or the
+product's reorder level, or would not last until a delivery ordered today arrives), `watch`
+(reaches that point within 3 days), `ordered` (short on the shelf but goods on order cover it),
+`ok`, `dead` (stock on the shelf and no sale for 60 days: never reordered) and `new` (no sales yet).
+
+- **Reorder point** = expected sales over the supplier's lead time + safety stock, where safety
+  stock = 1.65 × σ × √(lead time) for a 95% chance of not running out (σ: spread of the
+  one-day-ahead errors).
+- **Suggested quantity** = expected sales over the lead time plus a week + safety stock − stock −
+  on order, rounded up to whole packs.
+
+**Plans.** `POST /restock/plans` takes `{ supplier?, budget?, source? }` (`budget` in paise incl.
+GST; `source` = `manual` or `alert`). With a budget, the most urgent items get one pack each first,
+then enough to last until their delivery, then the rest of their suggestion. Products without a
+preferred supplier (or with an inactive one) are listed under `skipped`. Making a plan expires any
+older draft, so only one waits at a time; drafts expire after 24 hours. Answers `409` when nothing
+needs reordering or the budget does not cover one pack.
+
+**Confirming** is the only way a plan orders anything. It re-checks goods on order; if any of the
+products were ordered since the plan was made, the plan expires instead (`409`), so nothing is
+ordered twice. Otherwise it places one `ordered` purchase order per supplier, each noted "From
+restock plan RST/26-27/00001", in one transaction, and writes an audit log entry. The AI assistant
+(step 9.6) will be able to prepare and edit drafts but has no way to confirm one.

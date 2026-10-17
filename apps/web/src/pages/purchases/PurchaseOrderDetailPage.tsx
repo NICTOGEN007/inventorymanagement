@@ -14,6 +14,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { PurchaseStatusBadge } from '@/components/PurchaseStatusBadge';
 import { ErrorAlert } from '@/components/ui/Alert';
 import { Button, buttonClass } from '@/components/ui/Button';
+import { Callout } from '@/components/ui/Callout';
 import { Card } from '@/components/ui/Card';
 import { Dialog } from '@/components/ui/Dialog';
 import { Field } from '@/components/ui/Field';
@@ -172,12 +173,12 @@ export function PurchaseOrderDetailPage() {
       </div>
 
       {po.cancelReason && (
-        <Card className="border-amber-200 bg-amber-50 p-4 text-sm dark:border-amber-500/30 dark:bg-amber-500/10">
+        <Callout tone="warning">
           <span className="font-medium">
             {po.status === 'closed' ? 'Closed short' : 'Cancelled'}:
           </span>{' '}
           {po.cancelReason}
-        </Card>
+        </Callout>
       )}
 
       <Card className="overflow-hidden">

@@ -93,6 +93,7 @@ export interface SeedProduct {
   stock: number;
   reorderLevel: number;
   reorderQuantity: number;
+  packSize: number;
   preferredSupplier: Id;
   isActive: boolean;
   createdAt: Date;
@@ -439,6 +440,7 @@ export function generateDataset({ days, seed, now }: GenerateOptions): Dataset {
       stock: openingStock,
       reorderLevel,
       reorderQuantity,
+      packSize: pack,
       preferredSupplier: suppliers[sIndex]!._id,
       isActive: true,
       createdAt: setupTime,

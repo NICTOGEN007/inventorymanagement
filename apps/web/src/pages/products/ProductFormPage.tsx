@@ -52,6 +52,7 @@ const formSchema = z.object({
   taxInclusive: z.boolean(),
   reorderLevel: z.string().trim().regex(QUANTITY, 'Enter a number'),
   reorderQuantity: z.string().trim().regex(QUANTITY, 'Enter a number'),
+  packSize: z.string().trim().regex(/^\d+$/, 'Enter a whole number'),
   openingStock: z.string().trim().regex(QUANTITY, 'Enter a number'),
   preferredSupplier: z.string(),
 });
@@ -75,6 +76,7 @@ function toPayload(v: FormValues) {
     taxInclusive: v.taxInclusive,
     reorderLevel: Number(v.reorderLevel),
     reorderQuantity: Number(v.reorderQuantity),
+    packSize: Number(v.packSize),
     openingStock: Number(v.openingStock),
     preferredSupplier: v.preferredSupplier,
   };
@@ -105,6 +107,7 @@ const EMPTY: FormValues = {
   taxInclusive: true,
   reorderLevel: '10',
   reorderQuantity: '24',
+  packSize: '1',
   openingStock: '0',
   preferredSupplier: '',
 };
@@ -126,6 +129,7 @@ function fromProduct(p: ProductDto): FormValues {
     taxInclusive: p.taxInclusive,
     reorderLevel: String(p.reorderLevel),
     reorderQuantity: String(p.reorderQuantity),
+    packSize: String(p.packSize),
     openingStock: '0',
     preferredSupplier: p.preferredSupplier?.id ?? '',
   };
@@ -330,7 +334,7 @@ function ProductForm({ product }: { product?: ProductDto }) {
       </Section>
 
       <Section title="Stock and reordering">
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {!isEdit && (
             <Field
               label="Opening stock"
@@ -354,8 +358,15 @@ function ProductForm({ product }: { product?: ProductDto }) {
           >
             <Input inputMode="decimal" {...form.register('reorderQuantity')} />
           </Field>
+          <Field
+            label="Pack size"
+            error={errors.packSize?.message}
+            hint="Restock orders round up to whole packs."
+          >
+            <Input inputMode="numeric" {...form.register('packSize')} />
+          </Field>
           {can('purchases:read') && (
-            <div className={isEdit ? '' : 'sm:col-span-3'}>
+            <div className="sm:col-span-2 lg:col-span-4">
               <Field
                 label="Preferred supplier (optional)"
                 error={errors.preferredSupplier?.message}

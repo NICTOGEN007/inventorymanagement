@@ -14,6 +14,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { BarList } from '@/components/charts/BarList';
 import { ShareBar } from '@/components/charts/ShareBar';
 import { TrendChart } from '@/components/charts/TrendChart';
+import { RestockBanner } from '@/components/RestockBanner';
 import { StockBadge } from '@/components/StockBadge';
 import { ErrorAlert } from '@/components/ui/Alert';
 import { Card } from '@/components/ui/Card';
@@ -90,6 +91,8 @@ export function DashboardPage() {
           Detailed reports <ArrowRight className="size-4" aria-hidden />
         </Link>
       </div>
+
+      <RestockBanner />
 
       <div className="flex flex-wrap gap-2" role="group" aria-label="Period">
         {PERIODS.map((p) => (

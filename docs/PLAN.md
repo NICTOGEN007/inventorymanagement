@@ -153,6 +153,6 @@ stateDiagram-v2
 - [x] **7. POS + GST invoice PDF**: barcode billing, split payments, IGST for other states, invoice PDF
 - [x] **8. Returns + customers**: credit notes, exact refunds, restocking, customer profiles and history
 - [x] **9. Dashboard, reports, exports**: KPIs vs previous period, sales trend, profit, GST summary with set-off, stock valuation, CSV/PDF
-- [ ] **9.5 AI: Forecasting engine, restock plans with confirmation, proactive alerts**
+- [x] **9.5 AI: Forecasting engine, restock plans with confirmation, proactive alerts**
 - [ ] **9.6 AI: Gemini assistant that answers questions and prepares restock plans**
 - [ ] **10. End-to-end tests, docs (SRS, DFD, use-case, sequence diagrams), screenshots, deployment**

@@ -39,6 +39,14 @@ const productSchema = new Schema(
     reorderLevel: { type: Number, required: true, min: 0, default: 10 },
     /** Default quantity to order when restocking. */
     reorderQuantity: { type: Number, required: true, min: 0, default: 50 },
+    /** The supplier sells it in packs (cartons, crates) of this many; restock orders round up to it. */
+    packSize: {
+      type: Number,
+      required: true,
+      min: [1, 'Pack size must be at least 1'],
+      default: 1,
+      validate: { validator: Number.isInteger, message: 'Pack size must be a whole number' },
+    },
     preferredSupplier: { type: Schema.Types.ObjectId, ref: 'Supplier' },
     imageUrl: { type: String, trim: true },
     isActive: { type: Boolean, default: true },

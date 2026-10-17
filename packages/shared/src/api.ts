@@ -7,7 +7,9 @@ import type {
   StockMovementType,
   Unit,
 } from './constants.js';
+import type { Backtest, ForecastDay, ForecastMethod, RestockStatus } from './forecast.js';
 import type { GstRate } from './gst.js';
+import type { RestockPlanSource, RestockPlanStatus } from './schemas/restock.js';
 import type { TaxSplit } from './returns.js';
 import type { StockStatus } from './pricing.js';
 import type { StateCode } from './states.js';
@@ -95,6 +97,8 @@ export interface ProductDto {
   stock: number;
   reorderLevel: number;
   reorderQuantity: number;
+  /** Ordered from the supplier in packs of this many. */
+  packSize: number;
   stockStatus: StockStatus;
   /** Quantity on open purchase orders, not yet received. */
   onOrder: number;
@@ -375,4 +379,129 @@ export interface SaleReturnDto extends SaleReturnSummaryDto {
 
 export interface SaleReturnList extends Paginated<SaleReturnSummaryDto> {
   summary: { count: number; total: number };
+}
+
+// --- Forecasting and Smart Restock -----------------------------------------------------------
+
+/** One product's demand forecast and what to do about it. Quantities are in the product's unit. */
+export interface ForecastItemDto {
+  product: { id: string; name: string; sku: string; unit: Unit };
+  supplier?: { id: string; name: string; leadTimeDays: number };
+  stock: number;
+  onOrder: number;
+  packSize: number;
+  reorderLevel: number;
+  status: RestockStatus;
+  method: ForecastMethod;
+  /** Expected sales per day over the next week. */
+  dailyDemand: number;
+  leadTimeDemand: number;
+  safetyStock: number;
+  reorderPoint: number;
+  suggestedQuantity: number;
+  /** Days the stock lasts, or null if more than 120. */
+  daysUntilStockout: number | null;
+  festival?: { name: string; inDays: number; uplift: number };
+  reasons: string[];
+  /** Cost per unit excluding GST, in paise (the product's current average cost). */
+  unitCost: number;
+  gstRate: GstRate;
+}
+
+export interface ForecastAccuracyDto {
+  /** Weekly totals over the last 4 weeks, forecast from the data before them. */
+  mape: number;
+  /** Total absolute error ÷ total actual sales. */
+  wape: number;
+  /** Forecast total ÷ actual total − 1, as a percentage: negative means too low. */
+  bias: number;
+  /** The same for a 28-day moving average, for comparison. */
+  baseline: { mape: number; wape: number; bias: number };
+  products: number;
+  weeks: number;
+}
+
+export interface ForecastOverviewDto {
+  /** Last full day of sales the forecasts are based on (IST). */
+  asOf: string;
+  items: ForecastItemDto[];
+  counts: Record<RestockStatus, number>;
+}
+
+export interface ProductForecastDto {
+  item: ForecastItemDto;
+  /** Last 8 weeks of daily sales. */
+  history: { date: string; quantity: number; stockedOut: boolean }[];
+  /** Next 4 weeks. */
+  forecast: ForecastDay[];
+  model: {
+    method: ForecastMethod;
+    alpha: number;
+    beta: number;
+    gamma: number;
+    historyDays: number;
+    /** Weekly pattern, Sunday first, in units above or below a normal day. */
+    season: number[];
+    festivalUplift: Record<string, number>;
+    generalUplift: number;
+  };
+  backtest?: Backtest;
+}
+
+export interface RestockAlertDto {
+  /** Products to reorder now. */
+  reorder: number;
+  /** Of those, how many will run out before a delivery ordered today could arrive. */
+  runningOut: number;
+  outOfStock: number;
+  /** The most urgent few, for the banner. */
+  items: { id: string; name: string; daysUntilStockout: number | null }[];
+  /** A draft plan waiting for review, if there is one. */
+  openPlan?: { id: string; planNumber: string; itemCount: number };
+}
+
+export interface RestockPlanItemDto extends TaxAmounts {
+  product: { id: string; name: string; sku: string; unit: Unit };
+  stock: number;
+  onOrder: number;
+  dailyDemand: number;
+  daysUntilStockout: number | null;
+  packSize: number;
+  suggestedQuantity: number;
+  quantity: number;
+  unitCost: number;
+  gstRate: GstRate;
+  reasons: string[];
+}
+
+export interface RestockPlanGroupDto extends TaxAmounts {
+  supplier: { id: string; name: string; leadTimeDays: number };
+  interState: boolean;
+  items: RestockPlanItemDto[];
+  /** The purchase order placed for this supplier, once confirmed. */
+  purchaseOrder?: { id: string; poNumber: string };
+}
+
+export interface RestockPlanSummaryDto extends TaxAmounts {
+  id: string;
+  planNumber: string;
+  status: RestockPlanStatus;
+  source: RestockPlanSource;
+  itemCount: number;
+  supplierCount: number;
+  budget?: number;
+  createdAt: string;
+  expiresAt: string;
+  createdBy?: Ref;
+}
+
+export interface RestockPlanDto extends RestockPlanSummaryDto {
+  groups: RestockPlanGroupDto[];
+  /** Products the plan could not include, and why. */
+  skipped: { product: { id: string; name: string }; reason: string }[];
+  confirmedAt?: string;
+  confirmedBy?: Ref;
+  cancelledAt?: string;
+  /** Why a draft expired. */
+  expiredReason?: string;
 }

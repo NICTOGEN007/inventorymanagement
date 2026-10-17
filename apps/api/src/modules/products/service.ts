@@ -71,6 +71,7 @@ async function toDtos(products: ProductDoc[]): Promise<ProductDto[]> {
     stock: p.stock,
     reorderLevel: p.reorderLevel,
     reorderQuantity: p.reorderQuantity,
+    packSize: p.packSize ?? 1,
     stockStatus: stockStatus(p.stock, p.reorderLevel),
     onOrder: onOrder.get(String(p._id)) ?? 0,
     ...(p.preferredSupplier && {

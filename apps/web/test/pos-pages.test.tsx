@@ -39,6 +39,7 @@ const product = (id: string, name: string, overrides: Partial<ProductDto>): Prod
   stock: 10,
   reorderLevel: 2,
   reorderQuantity: 10,
+  packSize: 1,
   stockStatus: 'ok',
   onOrder: 0,
   isActive: true,
