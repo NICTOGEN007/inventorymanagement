@@ -25,12 +25,20 @@ const COLORS = { purple: '7030A0', red: 'C00000', green: '00863D', navy: '1F3864
 
 // ---------- helpers ----------
 function runs(text, base = {}) {
+  // Markup: **bold**, *italic*, x_{sub} for subscripts and x^{sup} for superscripts.
   const out = [];
   for (const part of String(text).split(/(\*\*[^*]+\*\*|\*[^*]+\*)/)) {
     if (!part) continue;
-    if (part.startsWith('**')) out.push(new TextRun({ ...base, text: part.slice(2, -2), bold: true }));
-    else if (part.startsWith('*') && part.length > 2) out.push(new TextRun({ ...base, text: part.slice(1, -1), italics: true }));
-    else out.push(new TextRun({ ...base, text: part }));
+    if (part.startsWith('**')) out.push(...runs(part.slice(2, -2), { ...base, bold: true }));
+    else if (part.startsWith('*') && part.length > 2) out.push(...runs(part.slice(1, -1), { ...base, italics: true }));
+    else {
+      for (const piece of part.split(/(_\{[^}]+\}|\^\{[^}]+\})/)) {
+        if (!piece) continue;
+        if (piece.startsWith('_{')) out.push(new TextRun({ ...base, text: piece.slice(2, -1), subScript: true }));
+        else if (piece.startsWith('^{')) out.push(new TextRun({ ...base, text: piece.slice(2, -1), superScript: true }));
+        else out.push(new TextRun({ ...base, text: piece }));
+      }
+    }
   }
   return out;
 }
@@ -170,7 +178,18 @@ content.chapters.forEach((ch, i) => {
     else if (kind === 'ul') body.push(...list(a[0], false));
     else if (kind === 'fig') body.push(...figure(a[0], a[1], a[2], a[3]));
     else if (kind === 'table') body.push(...table(a[0], a[1], a[2], a[3], a[4]));
-    else if (kind === 'eq') body.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 80, line: 300 }, children: [new TextRun({ text: a[0], italics: true, size: 24, font: FONT })] }));
+    else if (kind === 'eq') {
+      // Equation centred, its number "(3.1)" at the right margin.
+      body.push(new Paragraph({
+        spacing: { after: 100, line: 300 },
+        tabStops: [{ type: TabStopType.CENTER, position: Math.round(TEXT_W / 2) }, { type: TabStopType.RIGHT, position: TEXT_W }],
+        children: [
+          new TextRun({ text: '\t', size: 24, font: FONT }),
+          ...runs(a[0], { italics: true, size: 24, font: FONT }),
+          ...(a[1] ? [new TextRun({ text: `\t(${a[1]})`, size: 24, font: FONT })] : []),
+        ],
+      }));
+    }
     else throw new Error('unknown block ' + kind);
   }
 });
